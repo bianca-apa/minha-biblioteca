@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d1912">
+<title>Minha Biblioteca</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b160f; --wall:#13251b; --card:#16281e; --line:#2b4335;
+  --cream:#f1e6cf; --ink:#e9dfc8; --muted:#a39a84;
+  --amber:#f2b45a; --gold:#e0b04a; --danger:#e07a6c;
+  --serif:'Cormorant Garamond',Georgia,'Times New Roman',serif;
+  --sans:'Nunito Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--sans);min-height:100dvh}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+[hidden]{display:none!important}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+/* ---------- topo e navegação ---------- */
+.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
+  padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:rgba(11,22,15,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.brand{font:600 24px/1 var(--serif);color:var(--cream);letter-spacing:.2px}
+.link{background:none;border:0;color:var(--muted);padding:6px 4px;font-size:14px;text-decoration:underline;text-underline-offset:3px}
+.link:hover{color:var(--cream)}
+main{max-width:980px;margin:0 auto;padding:16px 12px calc(92px + env(safe-area-inset-bottom,0px))}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;gap:8px;justify-content:center;
+  padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));background:rgba(11,22,15,.95);backdrop-filter:blur(8px);border-top:1px solid var(--line)}
+.nav button{flex:1;max-width:260px;padding:11px 10px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-weight:700}
+.nav button[aria-current="page"]{background:var(--amber);color:#2a1a07;border-color:var(--amber)}
+
+/* ---------- cena da estante ---------- */
+.room{position:relative;border:1px solid var(--line);border-radius:18px;overflow:hidden;padding:44px 10px 18px;
+  background:
+   repeating-linear-gradient(90deg,rgba(255,255,255,.018) 0 2px,transparent 2px 64px),
+   linear-gradient(180deg,#0e1d15 0%,#16301f 100%)}
+.lights{position:absolute;left:0;right:0;top:0;height:40px;pointer-events:none;
+  background:radial-gradient(circle 3.5px,#ffd98a 96%,transparent) 0 20px/28px 40px repeat-x;
+  filter:drop-shadow(0 0 5px #ffcf70);animation:twinkle 3.6s ease-in-out infinite alternate}
+.lights::before{content:"";position:absolute;left:0;right:0;top:16px;height:1px;background:rgba(224,176,74,.25)}
+@keyframes twinkle{from{opacity:.55}to{opacity:1}}
+
+.decor{display:flex;align-items:flex-end;justify-content:space-around;height:128px;padding:0 6px}
+.decor svg{display:block;overflow:visible}
+.plank{height:13px;border-radius:2px;background:linear-gradient(#8f5e35,#5a3720);box-shadow:0 7px 12px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.12)}
+.row{margin-top:16px}
+.books{display:flex;align-items:flex-end;gap:2px;height:132px;padding:0 4px}
+
+.spine{flex:1 1 0;min-width:0;max-width:46px;height:var(--h);position:relative;display:flex;align-items:center;justify-content:center;
+  padding:14px 0 12px;overflow:hidden;border:0;border-radius:3px 3px 1px 1px;color:var(--cream);
+  background:linear-gradient(90deg,rgba(0,0,0,.38),rgba(255,255,255,.09) 32%,rgba(0,0,0,.28)),var(--c);
+  transition:transform .18s ease}
+.spine::before,.spine::after{content:"";position:absolute;left:0;right:0;height:3px;background:rgba(224,176,74,.72)}
+.spine::before{top:7px}.spine::after{bottom:7px}
+.spine:hover,.spine:focus-visible{transform:translateY(-7px)}
+.spine span{writing-mode:vertical-rl;transform:rotate(180deg);max-height:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font:700 13px/1.1 var(--serif);text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.spine.empty{height:74%;background:rgba(255,255,255,.025);border:1px dashed rgba(241,230,207,.2)}
+.spine.empty::before,.spine.empty::after{display:none}
+.spine.empty span{writing-mode:horizontal-tb;transform:none;font:400 18px/1 var(--sans);opacity:.4;text-shadow:none}
+.hint{margin:14px 4px 0;color:var(--muted);font-size:14px;text-align:center}
+
+/* animações: fumaça da xícara e rabo do gato */
+.steam{fill:none;stroke:rgba(241,230,207,.7);stroke-width:3;stroke-linecap:round;
+  transform-box:fill-box;transform-origin:50% 100%;animation:steam 3.6s ease-in-out infinite;opacity:0}
+.steam.s2{animation-delay:1.2s}.steam.s3{animation-delay:2.4s}
+@keyframes steam{
+  0%{opacity:0;transform:translateY(8px) scaleX(.8)}
+  30%{opacity:.75}
+  60%{transform:translateY(-4px) scaleX(1.15)}
+  100%{opacity:0;transform:translateY(-16px) scaleX(.85)}}
+.tail{transform-origin:34px 98px;animation:tail 2.4s ease-in-out infinite alternate}
+@keyframes tail{from{transform:rotate(-12deg)}to{transform:rotate(16deg)}}
+.blink{transform-box:fill-box;transform-origin:center;animation:blink 6s infinite}
+@keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+
+/* ---------- biblioteca ---------- */
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}
+h1,h2{font-family:var(--serif);color:var(--cream);margin:0}
+h1{font-size:30px;line-height:1.1}
+.count{color:var(--muted);font-size:14px}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:9px 14px;font-weight:700}
+.btn:hover{border-color:var(--amber)}
+.btn.primary{background:var(--amber);border-color:var(--amber);color:#2a1a07}
+.btn.danger{color:var(--danger)}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:thin}
+.tab{flex:none;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--muted);font-weight:600}
+.tab[aria-selected="true"]{background:var(--cream);color:#1d2a20;border-color:var(--cream)}
+.tools{display:flex;gap:14px;margin:2px 0 14px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 10px}
+@media(min-width:640px){.grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:20px 14px}}
+@media(min-width:900px){.grid{grid-template-columns:repeat(7,minmax(0,1fr))}}
+.cover{all:unset;display:block;cursor:pointer}
+.cover:focus-visible .img{outline:2px solid var(--amber);outline-offset:2px}
+.img{aspect-ratio:2/3;overflow:hidden;border-radius:3px 8px 8px 3px;background:var(--card);
+  box-shadow:0 8px 16px rgba(0,0,0,.5),inset 5px 0 7px -4px rgba(255,255,255,.25);transition:transform .18s ease}
+.cover:hover .img{transform:translateY(-4px)}
+.img img{width:100%;height:100%;object-fit:cover;display:block}
+.ph{height:100%;display:flex;align-items:center;justify-content:center;padding:8px;text-align:center;
+  font:700 14px/1.15 var(--serif);color:var(--cream);background:linear-gradient(160deg,var(--c),#161b17)}
+.stars{text-align:center;margin-top:7px;font-size:14px;letter-spacing:1px;line-height:1}
+.on{color:var(--gold)}.off{color:#47584d}
+.empty-state{border:1px dashed var(--line);border-radius:14px;padding:30px 16px;text-align:center;color:var(--muted)}
+
+/* ---------- janelas ---------- */
+dialog{border:1px solid var(--line);border-radius:16px;background:#101e16;color:var(--ink);padding:0;
+  width:min(580px,calc(100vw - 16px));max-height:calc(100dvh - 16px)}
+dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(3px)}
+.dlg{display:grid;gap:12px;padding:18px}
+.dlg h2{font-size:26px}
+label.f{display:grid;gap:4px;font-size:13px;color:var(--muted);font-weight:600}
+input[type=text],input[type=email],input[type=password],input[type=date],textarea{
+  width:100%;background:#0b160f;border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--ink);font-size:16px}
+textarea{min-height:130px;resize:vertical;line-height:1.5}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.head{display:grid;grid-template-columns:104px 1fr;gap:12px;align-items:start}
+.pick{display:flex;align-items:center;justify-content:center;aspect-ratio:2/3;border:1px dashed rgba(241,230,207,.35);border-radius:3px 8px 8px 3px;
+  overflow:hidden;cursor:pointer;color:var(--muted);font-size:13px;text-align:center;background:#0b160f}
+.pick img{width:100%;height:100%;object-fit:cover}
+.pick input{display:none}
+.pick:focus-within{outline:2px solid var(--amber)}
+.rate{display:flex;gap:2px}
+.rate button{background:none;border:0;font-size:30px;line-height:1;padding:2px 3px;color:#47584d}
+.rate button.on{color:var(--gold)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:4px}
+.actions .spacer{flex:1}
+
+/* ---------- login ---------- */
+.auth{min-height:100dvh;display:grid;place-items:center;padding:20px;
+  background:radial-gradient(ellipse at 50% 0%,#1b3a28,#0b160f 70%)}
+.auth form{width:min(400px,100%);display:grid;gap:12px;padding:24px;border:1px solid var(--line);border-radius:18px;background:rgba(16,30,22,.9)}
+.auth h1{font-size:38px}
+.auth p{margin:0;color:var(--muted);font-size:15px}
+.msg{font-size:14px;min-height:1.2em;color:var(--amber)}
+.toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:50;
+  max-width:min(92vw,460px);padding:10px 16px;border-radius:12px;background:var(--cream);color:#1d2a20;font-weight:700;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.toast.err{background:var(--danger);color:#2b0d08}
+.setup{max-width:560px;margin:60px auto;padding:20px}
+.setup code{background:#0b160f;padding:2px 6px;border-radius:6px}
+
+@media (prefers-reduced-motion:reduce){
+  .steam,.tail,.blink,.lights{animation:none}
+  .steam{opacity:.5}
+  .spine,.img{transition:none}
+}
+</style>
+</head>
+<body>
+
+<!-- Aviso de configuração -->
+<section id="setup" class="setup" hidden>
+  <h1>Falta configurar o Supabase</h1>
+  <p>Abra o arquivo <code>config.js</code> e cole a URL e a chave <code>anon public</code> do seu projeto. Os passos completos estão no <code>README.md</code>.</p>
+</section>
+
+<!-- Login -->
+<section id="auth" class="auth" hidden>
+  <form id="authForm" autocomplete="on">
+    <h1>Minha Biblioteca</h1>
+    <p>Entre com seu e-mail para ver sua estante no computador e no celular.</p>
+    <label class="f">E-mail<input id="email" type="email" required autocomplete="email" inputmode="email"></label>
+    <label class="f">Senha<input id="password" type="password" minlength="6" autocomplete="current-password"></label>
+    <button class="btn primary" type="submit" id="btnIn">Entrar</button>
+    <button class="btn" type="button" id="btnUp">Criar conta</button>
+    <button class="link" type="button" id="btnMagic">Receber link de acesso por e-mail</button>
+    <div class="msg" id="authMsg" role="status"></div>
+  </form>
+</section>
+
+<!-- App -->
+<div id="app" hidden>
+  <header class="top">
+    <span class="brand">Minha Biblioteca</span>
+    <button class="link" id="btnOut" type="button">Sair</button>
+  </header>
+
+  <main>
+    <!-- ESTANTE -->
+    <section id="viewShelf">
+      <div class="room">
+        <div class="lights" aria-hidden="true"></div>
+
+        <div class="decor" aria-hidden="true">
+          <!-- vaso com planta -->
+          <svg width="74" height="96" viewBox="0 0 74 96">
+            <path d="M37 60 C30 40 14 36 6 22 C22 22 34 34 37 52 Z" fill="#2f6b43"/>
+            <path d="M37 60 C44 38 58 30 68 14 C50 18 40 34 37 52 Z" fill="#3b8250"/>
+            <path d="M37 62 C36 44 38 28 37 8 C45 24 42 44 37 62 Z" fill="#2a5e3b"/>
+            <path d="M16 62 H58 L53 94 H21 Z" fill="#a86a43"/>
+            <rect x="13" y="58" width="48" height="8" rx="2" fill="#bd7b50"/>
+          </svg>
+
+          <!-- gato com rabo animado -->
+          <svg width="132" height="118" viewBox="0 0 132 118" role="img" aria-label="Gato laranja sentado na estante">
+            <g class="tail">
+              <path d="M36 100 C6 102 -2 66 18 52" fill="none" stroke="#d9894a" stroke-width="11" stroke-linecap="round"/>
+              <path d="M14 58 C12 54 14 52 18 50" fill="none" stroke="#f3dcc0" stroke-width="11" stroke-linecap="round"/>
+            </g>
+            <ellipse cx="68" cy="82" rx="32" ry="34" fill="#d9894a"/>
+            <path d="M54 62 q4 8 0 16 M68 58 q4 10 0 20 M82 62 q-4 8 0 16" stroke="#b8672f" stroke-width="4" fill="none" stroke-linecap="round"/>
+            <ellipse cx="68" cy="94" rx="15" ry="20" fill="#f3dcc0"/>
+            <ellipse cx="54" cy="112" rx="11" ry="6" fill="#f3dcc0"/>
+            <ellipse cx="82" cy="112" rx="11" ry="6" fill="#f3dcc0"/>
+            <circle cx="68" cy="40" r="22" fill="#d9894a"/>
+            <path d="M48 30 L50 6 L66 20 Z" fill="#d9894a"/>
+            <path d="M88 30 L86 6 L70 20 Z" fill="#d9894a"/>
+            <path d="M52 24 L53 13 L61 20 Z" fill="#e9a6a0"/>
+            <path d="M84 24 L83 13 L75 20 Z" fill="#e9a6a0"/>
+            <g class="blink"><ellipse cx="59" cy="40" rx="4.2" ry="5" fill="#f5d56b"/><ellipse cx="59" cy="40" rx="1.7" ry="4" fill="#2a1a07"/></g>
+            <g class="blink"><ellipse cx="77" cy="40" rx="4.2" ry="5" fill="#f5d56b"/><ellipse cx="77" cy="40" rx="1.7" ry="4" fill="#2a1a07"/></g>
+            <path d="M65.5 47 h5 l-2.5 3 Z" fill="#d97b86"/>
+            <path d="M68 50 v3 M63 54 q5 3 5 -1 q0 4 5 1" stroke="#7a3f1d" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+            <path d="M46 46 l-12 -3 M46 50 l-12 2 M90 46 l12 -3 M90 50 l12 2" stroke="#f3dcc0" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+
+          <!-- xícara com fumaça -->
+          <svg width="96" height="110" viewBox="0 0 96 110" role="img" aria-label="Xícara de chá fumegante">
+            <path class="steam" d="M34 48 C27 38 40 31 34 20 C30 12 38 8 35 0"/>
+            <path class="steam s2" d="M48 48 C41 38 54 31 48 20 C44 12 52 8 49 0"/>
+            <path class="steam s3" d="M62 48 C55 38 68 31 62 20 C58 12 66 8 63 0"/>
+            <path d="M70 62 C88 60 88 84 68 84" fill="none" stroke="#d8e4ea" stroke-width="5" stroke-linecap="round"/>
+            <path d="M18 54 H72 V72 C72 86 62 96 45 96 C28 96 18 86 18 72 Z" fill="#eaf2f5"/>
+            <ellipse cx="45" cy="54" rx="27" ry="5" fill="#8a5a33"/>
+            <path d="M24 66 C24 78 30 86 40 90" fill="none" stroke="#a9c3cf" stroke-width="3" stroke-linecap="round" opacity=".7"/>
+            <ellipse cx="45" cy="99" rx="38" ry="7" fill="#c9dbe3"/>
+            <ellipse cx="45" cy="97" rx="30" ry="4.5" fill="#dcebf0"/>
+          </svg>
+        </div>
+        <div class="plank"></div>
+
+        <div id="shelves"></div>
+        <p class="hint">Toque na lombada de um livro para escrever o título e o autor.</p>
+      </div>
+    </section>
+
+    <!-- BIBLIOTECA -->
+    <section id="viewLibrary" hidden>
+      <div class="bar">
+        <div>
+          <h1>Livros que li</h1>
+          <div class="count" id="libCount"></div>
+        </div>
+        <button class="btn primary" id="btnAddBook" type="button">Adicionar livro</button>
+      </div>
+      <div class="tabs" id="tabs" role="tablist" aria-label="Abas da biblioteca"></div>
+      <div class="tools">
+        <button class="link" id="btnRenamePage" type="button">Renomear aba</button>
+        <button class="link" id="btnDeletePage" type="button">Excluir aba</button>
+      </div>
+      <div class="grid" id="grid"></div>
+    </section>
+  </main>
+
+  <nav class="nav" aria-label="Seções">
+    <button type="button" id="navShelf" aria-current="page">Estante</button>
+    <button type="button" id="navLib">Livros que li</button>
+  </nav>
+</div>
+
+<!-- Janela: lombada da estante -->
+<dialog id="slotDlg">
+  <form class="dlg" id="slotForm">
+    <h2>Livro na estante</h2>
+    <label class="f">Título<input id="sTitle" type="text" maxlength="120" autocomplete="off"></label>
+    <label class="f">Autor<input id="sAuthor" type="text" maxlength="120" autocomplete="off"></label>
+    <div class="actions">
+      <button class="btn danger" type="button" id="sClear">Limpar</button>
+      <span class="spacer"></span>
+      <button class="btn" type="button" id="sCancel">Cancelar</button>
+      <button class="btn primary" type="submit">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Janela: livro lido -->
+<dialog id="bookDlg">
+  <form class="dlg" id="bookForm">
+    <h2 id="bHead">Novo livro</h2>
+    <div class="head">
+      <label class="pick" id="bPick">
+        <span id="bPickTxt">Adicionar capa</span>
+        <input id="bFile" type="file" accept="image/*">
+      </label>
+      <div style="display:grid;gap:10px">
+        <label class="f">Nome do livro<input id="bTitle" type="text" maxlength="160" required autocomplete="off"></label>
+        <label class="f">Autor<input id="bAuthor" type="text" maxlength="120" autocomplete="off"></label>
+      </div>
+    </div>
+    <div class="two">
+      <label class="f">Gênero<input id="bGenre" type="text" maxlength="60" list="genres" autocomplete="off"></label>
+      <label class="f">Data em que li<input id="bDate" type="date"></label>
+    </div>
+    <label class="f">Tempo que demorei para ler<input id="bTime" type="text" maxlength="60" placeholder="ex.: 12 dias" autocomplete="off"></label>
+    <div>
+      <div style="font-size:13px;color:var(--muted);font-weight:600;margin-bottom:2px">Nota</div>
+      <div class="rate" id="bRate" role="group" aria-label="Nota em estrelas"></div>
+    </div>
+    <label class="f">Resumo<textarea id="bSummary" maxlength="6000"></textarea></label>
+    <div class="actions">
+      <button class="btn danger" type="button" id="bDelete">Excluir</button>
+      <span class="spacer"></span>
+      <button class="btn" type="button" id="bCancel">Fechar</button>
+      <button class="btn primary" type="submit" id="bSave">Salvar</button>
+    </div>
+  </form>
+</dialog>
+
+<datalist id="genres">
+  <option value="Fantasia"><option value="Romance"><option value="Ficção científica"><option value="Suspense">
+  <option value="Terror"><option value="Biografia"><option value="Autoajuda"><option value="Negócios">
+  <option value="Tecnologia"><option value="Clássicos"><option value="Quadrinhos e mangá"><option value="Poesia">
+  <option value="Infantojuvenil"><option value="História"><option value="Religião e espiritualidade">
+</datalist>
+
+<div id="toast" class="toast" hidden role="status"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script>
+"use strict";
+
+/* ====================== utilidades ====================== */
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const PER_ROW = 9;          // lombadas por prateleira
+const MIN_ROWS = 4;         // prateleiras mínimas (sempre sobra uma vazia no fim)
+const PAGE_CAP = 100;       // livros por aba
+const PALETTE = ["#7a2e2a", "#2f4a63", "#5b4a2a", "#2e5a46", "#6a3a52", "#8a5a2b", "#3b3f66", "#58603a", "#8c3b2e", "#2b4f55"];
+const HEIGHTS = [88, 94, 100, 91, 97, 86, 99, 93, 96];
+const colorOf = (n) => PALETTE[(n * 7 + 3) % PALETTE.length];
+
+let toastTimer;
+function toast(text, isErr = false) {
+  const t = $("#toast");
+  t.textContent = text;
+  t.className = "toast" + (isErr ? " err" : "");
+  t.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => (t.hidden = true), isErr ? 5000 : 2400);
+}
+
+/* ====================== estado ====================== */
+const cfg = window.APP_CONFIG || {};
+let sb = null;
+let user = null;
+let slots = new Map();   // slot -> {title, author}
+let pages = [];          // abas
+let books = [];          // livros lidos
+let currentPage = null;
+let editingSlot = null;
+let editingBook = null;
+let pendingFile = null;
+let rating = 0;
+
+/* ====================== início ====================== */
+init();
+
+async function init() {
+  if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY || cfg.SUPABASE_URL.includes("COLE_AQUI") || !window.supabase) {
+    $("#setup").hidden = false;
+    return;
+  }
+  sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+  sb.auth.onAuthStateChange((_event, session) => { handleSession(session); });
+  const { data } = await sb.auth.getSession();
+  handleSession(data.session);
+}
+
+async function handleSession(session) {
+  const u = session?.user || null;
+  if (u && user && u.id === user.id) return;
+  user = u;
+  if (!user) {
+    slots = new Map(); pages = []; books = []; currentPage = null;
+    $("#app").hidden = true;
+    $("#auth").hidden = false;
+    return;
+  }
+  $("#auth").hidden = true;
+  $("#app").hidden = false;
+  await loadAll();
+}
+
+/* ====================== login ====================== */
+const authMsg = (t) => ($("#authMsg").textContent = t);
+const creds = () => ({ email: $("#email").value.trim(), password: $("#password").value });
+
+$("#authForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const { email, password } = creds();
+  if (!password) return authMsg("Digite a senha ou use o link de acesso por e-mail.");
+  authMsg("Entrando…");
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  authMsg(error ? "Não foi possível entrar: e-mail ou senha incorretos." : "");
+});
+
+$("#btnUp").addEventListener("click", async () => {
+  const { email, password } = creds();
+  if (!email || password.length < 6) return authMsg("Informe um e-mail e uma senha com 6 ou mais caracteres.");
+  authMsg("Criando conta…");
+  const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: location.origin + location.pathname } });
+  if (error) return authMsg("Não foi possível criar a conta: " + error.message);
+  authMsg(data.session ? "" : "Conta criada. Confirme pelo link enviado ao seu e-mail e depois entre.");
+});
+
+$("#btnMagic").addEventListener("click", async () => {
+  const { email } = creds();
+  if (!email) return authMsg("Digite seu e-mail primeiro.");
+  authMsg("Enviando link…");
+  const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname } });
+  authMsg(error ? "Não foi possível enviar o link: " + error.message : "Link enviado. Abra o e-mail neste aparelho e toque nele.");
+});
+
+$("#btnOut").addEventListener("click", () => sb.auth.signOut());
+
+/* ====================== carregar dados ====================== */
+async function loadAll() {
+  const [s, p, b] = await Promise.all([
+    sb.from("shelf_slots").select("slot,title,author"),
+    sb.from("library_pages").select("*").order("position").order("created_at"),
+    sb.from("books").select("*").order("created_at"),
+  ]);
+  const failed = s.error || p.error || b.error;
+  if (failed) {
+    toast("Erro ao carregar. Confira se rodou o supabase.sql. (" + failed.message + ")", true);
+    return;
+  }
+  slots = new Map(s.data.map((r) => [r.slot, r]));
+  pages = p.data;
+  books = b.data;
+  if (!pages.length) await createPage("Página 1");
+  if (!pages.find((x) => x.id === currentPage)) currentPage = pages[0]?.id || null;
+  renderShelf();
+  renderLibrary();
+}
+
+/* ====================== navegação ====================== */
+function showView(name) {
+  const shelf = name === "shelf";
+  $("#viewShelf").hidden = !shelf;
+  $("#viewLibrary").hidden = shelf;
+  $("#navShelf").toggleAttribute("aria-current", shelf);
+  $("#navLib").toggleAttribute("aria-current", !shelf);
+  if (shelf) $("#navShelf").setAttribute("aria-current", "page");
+  else $("#navLib").setAttribute("aria-current", "page");
+  scrollTo({ top: 0 });
+}
+$("#navShelf").addEventListener("click", () => showView("shelf"));
+$("#navLib").addEventListener("click", () => showView("library"));
+
+/* ====================== estante ====================== */
+function renderShelf() {
+  const maxSlot = Math.max(-1, ...[...slots.entries()].filter(([, v]) => v.title || v.author).map(([k]) => k));
+  const rows = Math.max(MIN_ROWS, Math.floor(maxSlot / PER_ROW) + 2);
+  let html = "";
+  for (let r = 0; r < rows; r++) {
+    html += '<div class="row"><div class="books">';
+    for (let c = 0; c < PER_ROW; c++) {
+      const n = r * PER_ROW + c;
+      const v = slots.get(n);
+      const filled = v && (v.title || v.author);
+      if (filled) {
+        const label = v.title + (v.author ? " — " + v.author : "");
+        html += `<button type="button" class="spine" data-slot="${n}" style="--c:${colorOf(n)};--h:${HEIGHTS[(n + r) % HEIGHTS.length]}%" title="${esc(label)}" aria-label="${esc(label)}"><span>${esc(v.title || v.author)}</span></button>`;
+      } else {
+        html += `<button type="button" class="spine empty" data-slot="${n}" aria-label="Adicionar livro neste espaço"><span>+</span></button>`;
+      }
+    }
+    html += '</div><div class="plank"></div></div>';
+  }
+  $("#shelves").innerHTML = html;
+}
+
+$("#shelves").addEventListener("click", (e) => {
+  const b = e.target.closest(".spine");
+  if (!b) return;
+  editingSlot = Number(b.dataset.slot);
+  const v = slots.get(editingSlot);
+  $("#sTitle").value = v?.title || "";
+  $("#sAuthor").value = v?.author || "";
+  $("#sClear").hidden = !(v && (v.title || v.author));
+  $("#slotDlg").showModal();
+  $("#sTitle").focus();
+});
+
+$("#slotForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const title = $("#sTitle").value.trim();
+  const author = $("#sAuthor").value.trim();
+  if (!title && !author) return clearSlot();
+  const { error } = await sb.from("shelf_slots").upsert(
+    { user_id: user.id, slot: editingSlot, title, author, updated_at: new Date().toISOString() },
+    { onConflict: "user_id,slot" }
+  );
+  if (error) return toast("Não foi possível salvar: " + error.message, true);
+  slots.set(editingSlot, { slot: editingSlot, title, author });
+  $("#slotDlg").close();
+  renderShelf();
+});
+$("#sClear").addEventListener("click", clearSlot);
+$("#sCancel").addEventListener("click", () => $("#slotDlg").close());
+
+async function clearSlot() {
+  const { error } = await sb.from("shelf_slots").delete().eq("slot", editingSlot);
+  if (error) return toast("Não foi possível limpar: " + error.message, true);
+  slots.delete(editingSlot);
+  $("#slotDlg").close();
+  renderShelf();
+}
+
+/* ====================== biblioteca ====================== */
+const coverUrl = (path) => sb.storage.from("covers").getPublicUrl(path).data.publicUrl;
+const starsHtml = (n) => `<span class="on">${"★".repeat(n)}</span><span class="off">${"★".repeat(5 - n)}</span>`;
+const booksIn = (pageId) => books.filter((b) => b.page_id === pageId);
+
+function renderLibrary() {
+  $("#tabs").innerHTML =
+    pages.map((p) => `<button type="button" class="tab" role="tab" data-page="${p.id}" aria-selected="${p.id === currentPage}">${esc(p.name)}</button>`).join("") +
+    '<button type="button" class="tab" id="tabNew" aria-label="Criar nova aba">+ Nova aba</button>';
+
+  const list = booksIn(currentPage);
+  $("#libCount").textContent = `${list.length} de ${PAGE_CAP} nesta aba · ${books.length} no total`;
+  $("#btnDeletePage").hidden = pages.length < 2;
+
+  if (!list.length) {
+    $("#grid").innerHTML = '<div class="empty-state" style="grid-column:1/-1">Nenhum livro nesta aba ainda. Toque em “Adicionar livro” para colocar a primeira capa.</div>';
+    return;
+  }
+  $("#grid").innerHTML = list.map((b, i) => `
+    <button type="button" class="cover" data-book="${b.id}" aria-label="${esc(b.title)}, nota ${b.rating} de 5">
+      <div class="img">${b.cover_path
+        ? `<img src="${esc(coverUrl(b.cover_path))}" alt="Capa de ${esc(b.title)}" loading="lazy">`
+        : `<div class="ph" style="--c:${colorOf(i + 2)}">${esc(b.title)}</div>`}</div>
+      <div class="stars" aria-hidden="true">${starsHtml(b.rating)}</div>
+    </button>`).join("");
+}
+
+$("#tabs").addEventListener("click", async (e) => {
+  if (e.target.closest("#tabNew")) {
+    const name = prompt("Nome da nova aba:", `Página ${pages.length + 1}`);
+    if (!name || !name.trim()) return;
+    const p = await createPage(name.trim());
+    if (p) { currentPage = p.id; renderLibrary(); }
+    return;
+  }
+  const t = e.target.closest("[data-page]");
+  if (t) { currentPage = t.dataset.page; renderLibrary(); }
+});
+
+async function createPage(name) {
+  const { data, error } = await sb.from("library_pages")
+    .insert({ user_id: user.id, name, position: pages.length }).select().single();
+  if (error) { toast("Não foi possível criar a aba: " + error.message, true); return null; }
+  pages.push(data);
+  if (!currentPage) currentPage = data.id;
+  return data;
+}
+
+$("#btnRenamePage").addEventListener("click", async () => {
+  const p = pages.find((x) => x.id === currentPage);
+  const name = prompt("Novo nome da aba:", p?.name || "");
+  if (!name || !name.trim() || !p) return;
+  const { error } = await sb.from("library_pages").update({ name: name.trim() }).eq("id", p.id);
+  if (error) return toast("Não foi possível renomear: " + error.message, true);
+  p.name = name.trim();
+  renderLibrary();
+});
+
+$("#btnDeletePage").addEventListener("click", async () => {
+  if (pages.length < 2) return toast("Mantenha pelo menos uma aba.", true);
+  const p = pages.find((x) => x.id === currentPage);
+  const list = booksIn(currentPage);
+  const ok = confirm(list.length
+    ? `Excluir a aba “${p.name}” e os ${list.length} livros dela? Isso não pode ser desfeito.`
+    : `Excluir a aba “${p.name}”?`);
+  if (!ok) return;
+  const paths = list.map((b) => b.cover_path).filter(Boolean);
+  const { error } = await sb.from("library_pages").delete().eq("id", p.id);
+  if (error) return toast("Não foi possível excluir: " + error.message, true);
+  if (paths.length) sb.storage.from("covers").remove(paths);
+  pages = pages.filter((x) => x.id !== p.id);
+  books = books.filter((b) => b.page_id !== p.id);
+  currentPage = pages[0].id;
+  renderLibrary();
+});
+
+/* ====================== janela do livro ====================== */
+function paintRating() {
+  $("#bRate").innerHTML = [1, 2, 3, 4, 5]
+    .map((n) => `<button type="button" data-n="${n}" class="${n <= rating ? "on" : ""}" aria-label="${n} ${n === 1 ? "estrela" : "estrelas"}" aria-pressed="${n <= rating}">★</button>`).join("");
+}
+$("#bRate").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-n]");
+  if (!b) return;
+  const n = Number(b.dataset.n);
+  rating = rating === n ? 0 : n;
+  paintRating();
+});
+
+function setPreview(url) {
+  const pick = $("#bPick");
+  pick.querySelector("img")?.remove();
+  if (url) {
+    const img = document.createElement("img");
+    img.src = url; img.alt = "Capa do livro";
+    pick.prepend(img);
+    $("#bPickTxt").hidden = true;
+  } else {
+    $("#bPickTxt").hidden = false;
+  }
+}
+
+$("#bFile").addEventListener("change", (e) => {
+  const f = e.target.files[0];
+  if (!f) return;
+  pendingFile = f;
+  setPreview(URL.createObjectURL(f));
+});
+
+function openBook(id) {
+  editingBook = id ? books.find((b) => b.id === id) : null;
+  pendingFile = null;
+  $("#bFile").value = "";
+  $("#bHead").textContent = editingBook ? "Detalhes do livro" : "Novo livro";
+  $("#bTitle").value = editingBook?.title || "";
+  $("#bAuthor").value = editingBook?.author || "";
+  $("#bGenre").value = editingBook?.genre || "";
+  $("#bDate").value = editingBook?.date_read || "";
+  $("#bTime").value = editingBook?.read_time || "";
+  $("#bSummary").value = editingBook?.summary || "";
+  rating = editingBook?.rating || 0;
+  paintRating();
+  setPreview(editingBook?.cover_path ? coverUrl(editingBook.cover_path) : "");
+  $("#bDelete").hidden = !editingBook;
+  $("#bookDlg").showModal();
+  $("#bookDlg").scrollTop = 0;
+}
+
+$("#btnAddBook").addEventListener("click", () => openBook(null));
+$("#grid").addEventListener("click", (e) => {
+  const c = e.target.closest("[data-book]");
+  if (c) openBook(c.dataset.book);
+});
+$("#bCancel").addEventListener("click", () => $("#bookDlg").close());
+
+async function resizeImage(file, maxW = 480) {
+  const bmp = await createImageBitmap(file);
+  const scale = Math.min(1, maxW / bmp.width);
+  const c = document.createElement("canvas");
+  c.width = Math.round(bmp.width * scale);
+  c.height = Math.round(bmp.height * scale);
+  c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+  return new Promise((res) => c.toBlob(res, "image/jpeg", 0.85));
+}
+
+$("#bookForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const saveBtn = $("#bSave");
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Salvando…";
+  try {
+    const payload = {
+      title: $("#bTitle").value.trim(),
+      author: $("#bAuthor").value.trim(),
+      genre: $("#bGenre").value.trim(),
+      date_read: $("#bDate").value || null,
+      read_time: $("#bTime").value.trim(),
+      summary: $("#bSummary").value.trim(),
+      rating,
+    };
+
+    let coverPath = editingBook?.cover_path || null;
+    let oldPath = null;
+    if (pendingFile) {
+      const blob = await resizeImage(pendingFile);
+      const path = `${user.id}/${crypto.randomUUID()}.jpg`;
+      const up = await sb.storage.from("covers").upload(path, blob, { contentType: "image/jpeg" });
+      if (up.error) throw up.error;
+      oldPath = coverPath;
+      coverPath = path;
+    }
+    payload.cover_path = coverPath;
+
+    if (editingBook) {
+      const { data, error } = await sb.from("books").update(payload).eq("id", editingBook.id).select().single();
+      if (error) throw error;
+      books = books.map((b) => (b.id === data.id ? data : b));
+    } else {
+      let pageId = currentPage;
+      if (booksIn(pageId).length >= PAGE_CAP) {
+        const p = await createPage(`Página ${pages.length + 1}`);
+        if (!p) throw new Error("Não foi possível criar a nova aba.");
+        pageId = p.id;
+        currentPage = p.id;
+        toast("A aba estava cheia. Criei uma nova para este livro.");
+      }
+      const { data, error } = await sb.from("books").insert({ ...payload, user_id: user.id, page_id: pageId }).select().single();
+      if (error) throw error;
+      books.push(data);
+    }
+    if (oldPath) sb.storage.from("covers").remove([oldPath]);
+    $("#bookDlg").close();
+    renderLibrary();
+  } catch (err) {
+    toast("Não foi possível salvar: " + (err.message || err), true);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Salvar";
+  }
+});
+
+$("#bDelete").addEventListener("click", async () => {
+  if (!editingBook) return;
+  if (!confirm(`Excluir “${editingBook.title}”? Isso não pode ser desfeito.`)) return;
+  const { error } = await sb.from("books").delete().eq("id", editingBook.id);
+  if (error) return toast("Não foi possível excluir: " + error.message, true);
+  if (editingBook.cover_path) sb.storage.from("covers").remove([editingBook.cover_path]);
+  books = books.filter((b) => b.id !== editingBook.id);
+  $("#bookDlg").close();
+  renderLibrary();
+});
+
+/* fechar janelas ao tocar fora */
+for (const d of document.querySelectorAll("dialog")) {
+  d.addEventListener("click", (e) => { if (e.target === d) d.close(); });
+}
+</script>
+</body>
+</html>
