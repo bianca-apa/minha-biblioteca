@@ -3,203 +3,284 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0d1912">
+<meta name="theme-color" content="#ebe6db">
 <title>Minha Biblioteca</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0b160f; --wall:#13251b; --card:#16281e; --line:#2b4335;
-  --cream:#f1e6cf; --ink:#e9dfc8; --muted:#a39a84;
-  --amber:#f2b45a; --gold:#e0b04a; --danger:#e07a6c;
-  --serif:'Cormorant Garamond',Georgia,'Times New Roman',serif;
-  --sans:'Nunito Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
-  color-scheme:dark;
+  --bg:#ebe6db; --paper:#fffdf9; --card:#e9e5db; --card2:#ddd7c8; --line:#d3ccba;
+  --tab:#b7ac95; --tab2:#a69b83; --ink:#26221b; --muted:#7a7262;
+  --gold:#d9a521; --off:#d8d2c2; --danger:#a8432f; --leaf:#2f6b43;
+  --serif:'EB Garamond',Georgia,'Times New Roman',serif;
+  --hand:'Patrick Hand','Segoe Print',cursive;
+  --tabw:42px;
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 var(--sans);min-height:100dvh}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.45 var(--serif);min-height:100dvh}
 button,input,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 [hidden]{display:none!important}
-:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+:focus-visible{outline:2px solid #b8791a;outline-offset:2px}
 
-/* ---------- topo e navegação ---------- */
-.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;justify-content:space-between;
-  padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:rgba(11,22,15,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
-.brand{font:600 24px/1 var(--serif);color:var(--cream);letter-spacing:.2px}
-.link{background:none;border:0;color:var(--muted);padding:6px 4px;font-size:14px;text-decoration:underline;text-underline-offset:3px}
-.link:hover{color:var(--cream)}
-main{max-width:980px;margin:0 auto;padding:16px 12px calc(92px + env(safe-area-inset-bottom,0px))}
-.nav{position:fixed;left:0;right:0;bottom:0;z-index:20;display:flex;gap:8px;justify-content:center;
-  padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));background:rgba(11,22,15,.95);backdrop-filter:blur(8px);border-top:1px solid var(--line)}
-.nav button{flex:1;max-width:260px;padding:11px 10px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-weight:700}
-.nav button[aria-current="page"]{background:var(--amber);color:#2a1a07;border-color:var(--amber)}
+/* ---------- estrutura: página + abas na lateral direita ---------- */
+.shell{display:flex;max-width:1100px;margin:0 auto;min-height:100dvh}
+.content{flex:1;min-width:0;background:var(--paper);padding:calc(14px + env(safe-area-inset-top,0px)) 14px calc(28px + env(safe-area-inset-bottom,0px)) 14px;
+  box-shadow:0 0 0 1px var(--line)}
+.tabs{position:sticky;top:0;align-self:flex-start;height:100dvh;width:var(--tabw);display:flex;flex-direction:column;flex:none}
+.tabs button{flex:1;min-height:0;border:0;border-left:1px solid rgba(0,0,0,.08);border-bottom:1px solid rgba(0,0,0,.12);
+  background:var(--tab);color:#2f291f;writing-mode:vertical-rl;font:500 17px/1 var(--serif);letter-spacing:.3px;
+  padding:6px 0;border-radius:0 12px 12px 0;margin-left:-1px}
+.tabs button:first-child{border-top-right-radius:0}
+.tabs button:hover{background:var(--tab2)}
+.tabs button[aria-current="page"]{background:var(--paper);box-shadow:inset 3px 0 0 #8b7a55;font-weight:700}
+h1,h2,h3{font-family:var(--serif);font-weight:500;margin:0;color:var(--ink)}
+h1{font-size:30px;line-height:1.1}
+.sub{color:var(--muted);font-size:15px}
+.link{background:none;border:0;color:var(--muted);padding:4px 2px;font-size:15px;text-decoration:underline;text-underline-offset:3px}
+.link:hover{color:var(--ink)}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:8px 16px;font-weight:600}
+.btn:hover{background:var(--card2)}
+.btn.primary{background:#3c3426;border-color:#3c3426;color:#fffdf9}
+.btn.primary:hover{background:#2a2419}
+.btn.danger{color:var(--danger)}
+.btn[disabled]{opacity:.6}
 
-/* ---------- cena da estante ---------- */
-.room{position:relative;border:1px solid var(--line);border-radius:18px;overflow:hidden;padding:44px 10px 18px;
+/* ---------- biblioteca ---------- */
+.libhead{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.pager{display:flex;gap:2px;flex-wrap:wrap;justify-content:flex-end}
+.pager button{min-width:30px;height:32px;border:0;background:none;font-size:18px;border-bottom:2px solid transparent;padding:0 6px}
+.pager button[aria-selected="true"]{border-bottom-color:var(--ink);font-weight:700}
+.pager .add{color:var(--muted)}
+.meta{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin:0 0 14px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 10px}
+@media(min-width:640px){.grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:24px 16px}}
+@media(min-width:960px){.grid{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.cover{all:unset;display:block;cursor:pointer}
+.cover:focus-visible .img{outline:2px solid #b8791a;outline-offset:2px}
+.img{aspect-ratio:2/3;overflow:hidden;border-radius:2px;background:var(--card);box-shadow:0 2px 6px rgba(0,0,0,.28);transition:transform .15s ease}
+.cover:hover .img{transform:translateY(-3px)}
+.img img{width:100%;height:100%;object-fit:cover;display:block}
+.ph{height:100%;display:flex;align-items:center;justify-content:center;padding:6px;text-align:center;
+  font:600 14px/1.15 var(--serif);color:#fffdf9;background:linear-gradient(160deg,var(--c),#2b2b27)}
+.slot-add .img{display:flex;align-items:center;justify-content:center;background:var(--card);box-shadow:none;color:#a79f8b;font-size:34px}
+.stars{text-align:center;margin-top:5px;font-size:15px;letter-spacing:0;line-height:1;white-space:nowrap}
+.on{color:var(--gold)}.off{color:var(--off)}
+
+/* ---------- estante (sala aconchegante) ---------- */
+.room{position:relative;border-radius:14px;overflow:hidden;
   background:
-   repeating-linear-gradient(90deg,rgba(255,255,255,.018) 0 2px,transparent 2px 64px),
-   linear-gradient(180deg,#0e1d15 0%,#16301f 100%)}
-.lights{position:absolute;left:0;right:0;top:0;height:40px;pointer-events:none;
-  background:radial-gradient(circle 3.5px,#ffd98a 96%,transparent) 0 20px/28px 40px repeat-x;
-  filter:drop-shadow(0 0 5px #ffcf70);animation:twinkle 3.6s ease-in-out infinite alternate}
-.lights::before{content:"";position:absolute;left:0;right:0;top:16px;height:1px;background:rgba(224,176,74,.25)}
-@keyframes twinkle{from{opacity:.55}to{opacity:1}}
-
-.decor{display:flex;align-items:flex-end;justify-content:space-around;height:128px;padding:0 6px}
-.decor svg{display:block;overflow:visible}
-.plank{height:13px;border-radius:2px;background:linear-gradient(#8f5e35,#5a3720);box-shadow:0 7px 12px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.12)}
-.row{margin-top:16px}
-.books{display:flex;align-items:flex-end;gap:2px;height:132px;padding:0 4px}
-
+   repeating-linear-gradient(90deg,rgba(255,255,255,.02) 0 2px,transparent 2px 70px),
+   linear-gradient(180deg,#0c1b13 0%,#14301f 55%,#0f2318 100%);
+  border:1px solid #1f3a2a}
+.lights{position:absolute;left:0;right:0;top:0;height:42px;pointer-events:none;z-index:3;
+  background:radial-gradient(circle 3.4px,#ffd98a 96%,transparent) 0 20px/26px 42px repeat-x;
+  filter:drop-shadow(0 0 5px #ffcf70);animation:twinkle 3.4s ease-in-out infinite alternate}
+.lights::before{content:"";position:absolute;left:0;right:0;top:16px;height:1px;background:rgba(224,176,74,.28)}
+@keyframes twinkle{from{opacity:.5}to{opacity:1}}
+.room svg{display:block;width:100%;height:auto}
+.case{position:relative;padding:0 10px}
+.case::before,.case::after{content:"";position:absolute;top:0;bottom:0;width:10px;background:linear-gradient(90deg,#2a1a0e,#4b2f1a);z-index:1}
+.case::before{left:0}.case::after{right:0}
+.row{margin-top:0}
+.books{display:flex;align-items:flex-end;gap:2px;height:122px;padding:0 4px;
+  background:linear-gradient(180deg,rgba(0,0,0,.28),rgba(0,0,0,0) 40%)}
+.plank{height:12px;background:linear-gradient(#966236,#5a3720);box-shadow:0 6px 10px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.14)}
 .spine{flex:1 1 0;min-width:0;max-width:46px;height:var(--h);position:relative;display:flex;align-items:center;justify-content:center;
-  padding:14px 0 12px;overflow:hidden;border:0;border-radius:3px 3px 1px 1px;color:var(--cream);
-  background:linear-gradient(90deg,rgba(0,0,0,.38),rgba(255,255,255,.09) 32%,rgba(0,0,0,.28)),var(--c);
-  transition:transform .18s ease}
-.spine::before,.spine::after{content:"";position:absolute;left:0;right:0;height:3px;background:rgba(224,176,74,.72)}
+  padding:14px 0 12px;overflow:hidden;border:0;border-radius:3px 3px 1px 1px;color:#f6ecd6;
+  background:linear-gradient(90deg,rgba(0,0,0,.4),rgba(255,255,255,.1) 32%,rgba(0,0,0,.3)),var(--c);transition:transform .18s ease}
+.spine::before,.spine::after{content:"";position:absolute;left:0;right:0;height:3px;background:rgba(224,176,74,.75)}
 .spine::before{top:7px}.spine::after{bottom:7px}
 .spine:hover,.spine:focus-visible{transform:translateY(-7px)}
 .spine span{writing-mode:vertical-rl;transform:rotate(180deg);max-height:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  font:700 13px/1.1 var(--serif);text-shadow:0 1px 2px rgba(0,0,0,.6)}
-.spine.empty{height:74%;background:rgba(255,255,255,.025);border:1px dashed rgba(241,230,207,.2)}
+  font:600 14px/1.1 var(--serif);text-shadow:0 1px 2px rgba(0,0,0,.65)}
+.spine.empty{height:72%;background:rgba(255,255,255,.03);border:1px dashed rgba(246,236,214,.22)}
 .spine.empty::before,.spine.empty::after{display:none}
-.spine.empty span{writing-mode:horizontal-tb;transform:none;font:400 18px/1 var(--sans);opacity:.4;text-shadow:none}
-.hint{margin:14px 4px 0;color:var(--muted);font-size:14px;text-align:center}
+.spine.empty span{writing-mode:horizontal-tb;transform:none;font:400 18px/1 var(--serif);opacity:.4;text-shadow:none}
+.ivy{position:absolute;pointer-events:none;z-index:2;opacity:.95}
+.ivy svg{width:100%;height:100%}
+.hint{margin:12px 0 0;color:var(--muted);font-size:15px;text-align:center}
 
-/* animações: fumaça da xícara e rabo do gato */
-.steam{fill:none;stroke:rgba(241,230,207,.7);stroke-width:3;stroke-linecap:round;
-  transform-box:fill-box;transform-origin:50% 100%;animation:steam 3.6s ease-in-out infinite;opacity:0}
-.steam.s2{animation-delay:1.2s}.steam.s3{animation-delay:2.4s}
+/* animações: fumaça do café e rabo do gato */
+.steam{fill:none;stroke:rgba(255,246,228,.85);stroke-width:3.2;stroke-linecap:round;
+  transform-box:fill-box;transform-origin:50% 100%;animation:steam 3.4s ease-in-out infinite;opacity:0}
+.steam.s2{animation-delay:1.1s}.steam.s3{animation-delay:2.2s}
 @keyframes steam{
   0%{opacity:0;transform:translateY(8px) scaleX(.8)}
-  30%{opacity:.75}
+  30%{opacity:.85}
   60%{transform:translateY(-4px) scaleX(1.15)}
   100%{opacity:0;transform:translateY(-16px) scaleX(.85)}}
-.tail{transform-origin:34px 98px;animation:tail 2.4s ease-in-out infinite alternate}
-@keyframes tail{from{transform:rotate(-12deg)}to{transform:rotate(16deg)}}
+.tail{transform-origin:34px 98px;animation:tail 2.3s ease-in-out infinite alternate}
+@keyframes tail{from{transform:rotate(-13deg)}to{transform:rotate(17deg)}}
 .blink{transform-box:fill-box;transform-origin:center;animation:blink 6s infinite}
 @keyframes blink{0%,94%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
+.glow{animation:glow 5s ease-in-out infinite alternate}
+@keyframes glow{from{opacity:.75}to{opacity:1}}
 
-/* ---------- biblioteca ---------- */
-.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:12px}
-h1,h2{font-family:var(--serif);color:var(--cream);margin:0}
-h1{font-size:30px;line-height:1.1}
-.count{color:var(--muted);font-size:14px}
-.btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:9px 14px;font-weight:700}
-.btn:hover{border-color:var(--amber)}
-.btn.primary{background:var(--amber);border-color:var(--amber);color:#2a1a07}
-.btn.danger{color:var(--danger)}
-.tabs{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:thin}
-.tab{flex:none;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--muted);font-weight:600}
-.tab[aria-selected="true"]{background:var(--cream);color:#1d2a20;border-color:var(--cream)}
-.tools{display:flex;gap:14px;margin:2px 0 14px}
-.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px 10px}
-@media(min-width:640px){.grid{grid-template-columns:repeat(5,minmax(0,1fr));gap:20px 14px}}
-@media(min-width:900px){.grid{grid-template-columns:repeat(7,minmax(0,1fr))}}
-.cover{all:unset;display:block;cursor:pointer}
-.cover:focus-visible .img{outline:2px solid var(--amber);outline-offset:2px}
-.img{aspect-ratio:2/3;overflow:hidden;border-radius:3px 8px 8px 3px;background:var(--card);
-  box-shadow:0 8px 16px rgba(0,0,0,.5),inset 5px 0 7px -4px rgba(255,255,255,.25);transition:transform .18s ease}
-.cover:hover .img{transform:translateY(-4px)}
-.img img{width:100%;height:100%;object-fit:cover;display:block}
-.ph{height:100%;display:flex;align-items:center;justify-content:center;padding:8px;text-align:center;
-  font:700 14px/1.15 var(--serif);color:var(--cream);background:linear-gradient(160deg,var(--c),#161b17)}
-.stars{text-align:center;margin-top:7px;font-size:14px;letter-spacing:1px;line-height:1}
-.on{color:var(--gold)}.off{color:#47584d}
-.empty-state{border:1px dashed var(--line);border-radius:14px;padding:30px 16px;text-align:center;color:var(--muted)}
+/* ---------- mês / desafios / extras ---------- */
+.yearnav{display:flex;align-items:center;gap:10px;margin:10px 0 14px}
+.yearnav button{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--card);font-size:18px;line-height:1}
+.months{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.months button{padding:12px 4px;border:0;border-radius:6px;background:#cdbf9f;font-size:18px;font-weight:500}
+.months button[aria-pressed="true"]{background:#8b7a55;color:#fffdf9}
+.months button small{display:block;font-size:13px;opacity:.75}
+.panel{background:var(--card);border-radius:10px;padding:12px 14px;margin-top:14px}
+.panel h3{font-size:20px;font-weight:600;margin-bottom:6px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.chip{background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-size:15px}
+.rowbook{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;width:100%;text-align:left;border:0;background:none;
+  padding:8px 0;border-top:1px solid var(--line)}
+.rowbook:first-of-type{border-top:0}
+.rowbook .t{width:44px;aspect-ratio:2/3;border-radius:2px;overflow:hidden;background:var(--card2);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.rowbook .t img{width:100%;height:100%;object-fit:cover;display:block}
+.rowbook b{display:block;font-weight:600}
+.rowbook span.s{color:var(--muted);font-size:15px}
+.bar{height:16px;border-radius:8px;background:var(--card2);overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,#8b7a55,#c9a35a);border-radius:8px;transition:width .5s ease}
+.goal{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:8px 0}
+.goal input{width:84px}
+.chart{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;align-items:end;height:130px;margin-top:10px}
+.chart div{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;font-size:12px;color:var(--muted)}
+.chart i{display:block;width:100%;background:#8b7a55;border-radius:3px 3px 0 0;min-height:2px}
+.chart b{font-weight:600;color:var(--ink);font-size:13px}
+.quote{font-family:var(--hand);font-size:19px;line-height:1.3;padding:8px 0;border-top:1px solid var(--line)}
+.quote:first-of-type{border-top:0}
+.quote small{display:block;font:400 14px var(--serif);color:var(--muted)}
+.empty-note{color:var(--muted);padding:10px 0}
 
-/* ---------- janelas ---------- */
-dialog{border:1px solid var(--line);border-radius:16px;background:#101e16;color:var(--ink);padding:0;
-  width:min(580px,calc(100vw - 16px));max-height:calc(100dvh - 16px)}
-dialog::backdrop{background:rgba(0,0,0,.68);backdrop-filter:blur(3px)}
-.dlg{display:grid;gap:12px;padding:18px}
-.dlg h2{font-size:26px}
-label.f{display:grid;gap:4px;font-size:13px;color:var(--muted);font-weight:600}
-input[type=text],input[type=email],input[type=password],input[type=date],textarea{
-  width:100%;background:#0b160f;border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--ink);font-size:16px}
-textarea{min-height:130px;resize:vertical;line-height:1.5}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.head{display:grid;grid-template-columns:104px 1fr;gap:12px;align-items:start}
-.pick{display:flex;align-items:center;justify-content:center;aspect-ratio:2/3;border:1px dashed rgba(241,230,207,.35);border-radius:3px 8px 8px 3px;
-  overflow:hidden;cursor:pointer;color:var(--muted);font-size:13px;text-align:center;background:#0b160f}
+/* ---------- ficha de resenha ---------- */
+.back{display:inline-flex;align-items:center;gap:6px;border:0;background:var(--card);border-radius:999px;padding:4px 14px 4px 10px;font-size:16px;margin-bottom:10px}
+.rev-top{display:grid;grid-template-columns:118px 1fr;gap:14px;align-items:start}
+.pick{display:flex;align-items:center;justify-content:center;aspect-ratio:2/3;border:1px dashed #b3a98f;border-radius:2px;overflow:hidden;
+  cursor:pointer;color:var(--muted);font-size:14px;text-align:center;background:var(--card);padding:4px}
 .pick img{width:100%;height:100%;object-fit:cover}
 .pick input{display:none}
-.pick:focus-within{outline:2px solid var(--amber)}
-.rate{display:flex;gap:2px}
-.rate button{background:none;border:0;font-size:30px;line-height:1;padding:2px 3px;color:#47584d}
+.pick:focus-within{outline:2px solid #b8791a}
+.rate{display:flex;justify-content:center;margin-top:4px}
+.rate button{background:none;border:0;font-size:25px;line-height:1;padding:0 1px;color:var(--off)}
 .rate button.on{color:var(--gold)}
-.actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;margin-top:4px}
-.actions .spacer{flex:1}
+.info{background:var(--card);border-radius:8px;padding:10px 12px;display:grid;gap:7px}
+.fld{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:baseline}
+.fld label{font-weight:600;font-size:15px}
+.fld input[type=text],.fld input[type=date],.fld input[type=number]{width:100%;border:0;border-bottom:1px solid #b3a98f;background:transparent;
+  font:400 19px/1.2 var(--hand);padding:2px 2px;border-radius:0}
+.fmt{display:flex;gap:12px;flex-wrap:wrap;font-size:15px}
+.fmt label{display:inline-flex;gap:5px;align-items:center}
+.cards{display:grid;grid-template-columns:1fr;gap:12px;margin-top:14px}
+@media(min-width:720px){.cards{grid-template-columns:1fr 1fr}}
+.card{background:var(--card);border-radius:8px;padding:10px 12px}
+.card h3{font-size:18px;font-weight:600;margin-bottom:4px}
+.card textarea{width:100%;border:0;background:transparent;resize:vertical;min-height:150px;font:400 19px/1.3 var(--hand);padding:0}
+.card textarea:focus{outline:1px dashed #b3a98f}
+.savebar{position:sticky;bottom:0;display:flex;gap:8px;justify-content:flex-end;padding:12px 0 calc(6px + env(safe-area-inset-bottom,0px));
+  margin-top:14px;background:linear-gradient(0deg,var(--paper) 70%,rgba(255,253,249,0))}
+.savebar .spacer{flex:1}
 
-/* ---------- login ---------- */
-.auth{min-height:100dvh;display:grid;place-items:center;padding:20px;
-  background:radial-gradient(ellipse at 50% 0%,#1b3a28,#0b160f 70%)}
-.auth form{width:min(400px,100%);display:grid;gap:12px;padding:24px;border:1px solid var(--line);border-radius:18px;background:rgba(16,30,22,.9)}
-.auth h1{font-size:38px}
-.auth p{margin:0;color:var(--muted);font-size:15px}
-.msg{font-size:14px;min-height:1.2em;color:var(--amber)}
-.toast{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:50;
-  max-width:min(92vw,460px);padding:10px 16px;border-radius:12px;background:var(--cream);color:#1d2a20;font-weight:700;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
-.toast.err{background:var(--danger);color:#2b0d08}
+/* ---------- janelas e login ---------- */
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--paper);color:var(--ink);padding:0;width:min(440px,calc(100vw - 16px))}
+dialog::backdrop{background:rgba(30,24,14,.55);backdrop-filter:blur(2px)}
+.dlg{display:grid;gap:12px;padding:18px}
+.dlg h2{font-size:26px}
+label.f{display:grid;gap:3px;font-size:15px;color:var(--muted);font-weight:600}
+input[type=text],input[type=email],input[type=password]{width:100%;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:17px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+.actions .spacer{flex:1}
+.auth{min-height:100dvh;display:grid;place-items:center;padding:20px}
+.auth form{width:min(400px,100%);display:grid;gap:12px;padding:24px;border:1px solid var(--line);border-radius:14px;background:var(--paper)}
+.auth h1{font-size:36px}
+.auth p{margin:0;color:var(--muted)}
+.msg{font-size:15px;min-height:1.2em;color:#8a5a12}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:50;max-width:min(88vw,460px);
+  padding:10px 16px;border-radius:12px;background:#3c3426;color:#fffdf9;font-weight:600;font-size:15px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+.toast.err{background:var(--danger)}
 .setup{max-width:560px;margin:60px auto;padding:20px}
-.setup code{background:#0b160f;padding:2px 6px;border-radius:6px}
+.setup code{background:var(--card);padding:2px 6px;border-radius:6px}
 
 @media (prefers-reduced-motion:reduce){
-  .steam,.tail,.blink,.lights{animation:none}
-  .steam{opacity:.5}
-  .spine,.img{transition:none}
+  .steam,.tail,.blink,.lights,.glow{animation:none}
+  .steam{opacity:.6}
+  .spine,.img,.bar i{transition:none}
 }
 </style>
 </head>
 <body>
 
-<!-- Aviso de configuração -->
 <section id="setup" class="setup" hidden>
   <h1>Falta configurar o Supabase</h1>
-  <p>Abra o arquivo <code>config.js</code> e cole a URL e a chave <code>anon public</code> do seu projeto. Os passos completos estão no <code>README.md</code>.</p>
+  <p>Abra o arquivo <code>config.js</code> e cole a URL e a chave <code>anon public</code> do seu projeto.</p>
 </section>
 
-<!-- Login -->
 <section id="auth" class="auth" hidden>
   <form id="authForm" autocomplete="on">
     <h1>Minha Biblioteca</h1>
     <p>Entre com seu e-mail para ver sua estante no computador e no celular.</p>
     <label class="f">E-mail<input id="email" type="email" required autocomplete="email" inputmode="email"></label>
     <label class="f">Senha<input id="password" type="password" minlength="6" autocomplete="current-password"></label>
-    <button class="btn primary" type="submit" id="btnIn">Entrar</button>
+    <button class="btn primary" type="submit">Entrar</button>
     <button class="btn" type="button" id="btnUp">Criar conta</button>
     <button class="link" type="button" id="btnMagic">Receber link de acesso por e-mail</button>
     <div class="msg" id="authMsg" role="status"></div>
   </form>
 </section>
 
-<!-- App -->
-<div id="app" hidden>
-  <header class="top">
-    <span class="brand">Minha Biblioteca</span>
-    <button class="link" id="btnOut" type="button">Sair</button>
-  </header>
+<div id="app" class="shell" hidden>
+  <div class="content">
 
-  <main>
+    <!-- BIBLIOTECA -->
+    <section id="v-library">
+      <div class="libhead">
+        <h1>Minha Biblioteca</h1>
+        <div class="pager" id="pager" role="tablist" aria-label="Páginas da biblioteca"></div>
+      </div>
+      <div class="meta">
+        <span class="sub" id="libCount"></span>
+        <button class="link" id="btnRenamePage" type="button">Renomear página</button>
+        <button class="link" id="btnDeletePage" type="button">Excluir página</button>
+      </div>
+      <div class="grid" id="grid"></div>
+    </section>
+
     <!-- ESTANTE -->
-    <section id="viewShelf">
-      <div class="room">
+    <section id="v-shelf" hidden>
+      <h1 style="margin-bottom:12px">Minha Estante</h1>
+      <div class="room" id="room">
         <div class="lights" aria-hidden="true"></div>
 
-        <div class="decor" aria-hidden="true">
-          <!-- vaso com planta -->
-          <svg width="74" height="96" viewBox="0 0 74 96">
-            <path d="M37 60 C30 40 14 36 6 22 C22 22 34 34 37 52 Z" fill="#2f6b43"/>
-            <path d="M37 60 C44 38 58 30 68 14 C50 18 40 34 37 52 Z" fill="#3b8250"/>
-            <path d="M37 62 C36 44 38 28 37 8 C45 24 42 44 37 62 Z" fill="#2a5e3b"/>
-            <path d="M16 62 H58 L53 94 H21 Z" fill="#a86a43"/>
-            <rect x="13" y="58" width="48" height="8" rx="2" fill="#bd7b50"/>
-          </svg>
-
+        <!-- parte de cima: janela, quadros, planta e gato sobre a estante -->
+        <svg viewBox="0 0 360 170" role="img" aria-label="Janela, quadros, uma planta e um gato laranja sentado no alto da estante">
+          <defs>
+            <linearGradient id="win" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d7e8a8"/><stop offset="1" stop-color="#5f8d4c"/></linearGradient>
+            <linearGradient id="cap" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9a6538"/><stop offset="1" stop-color="#5a3720"/></linearGradient>
+            <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9a36a"/><stop offset="1" stop-color="#8a6b45"/></linearGradient>
+          </defs>
+          <!-- janela arqueada com folhagem -->
+          <path d="M10 160 V52 Q10 14 48 14 Q86 14 86 52 V160 Z" fill="url(#win)" stroke="#3b2a1a" stroke-width="5"/>
+          <g fill="#2c6a3c" opacity=".55">
+            <circle cx="26" cy="42" r="11"/><circle cx="64" cy="58" r="13"/><circle cx="34" cy="96" r="14"/><circle cx="68" cy="122" r="12"/><circle cx="24" cy="140" r="11"/>
+          </g>
+          <path d="M48 14 V160 M10 84 H86 M10 122 H86" stroke="#3b2a1a" stroke-width="3" fill="none"/>
+          <!-- quadro de paisagem -->
+          <rect x="112" y="14" width="88" height="64" fill="#2c2114" stroke="#b58a3c" stroke-width="4"/>
+          <rect x="116" y="18" width="80" height="56" fill="url(#sky)"/>
+          <path d="M116 74 L140 42 L156 58 L172 34 L196 74 Z" fill="#5d503c"/>
+          <path d="M144 74 C150 64 160 66 166 56 C172 66 168 70 176 74 Z" fill="#7d6c4f"/>
+          <!-- quadro botânico -->
+          <rect x="210" y="28" width="32" height="44" fill="#efe3c8" stroke="#b58a3c" stroke-width="3"/>
+          <path d="M226 66 V46" stroke="#4f7a53" stroke-width="2"/>
+          <circle cx="226" cy="42" r="5" fill="#b5485a"/><circle cx="220" cy="52" r="3.5" fill="#d98a8f"/><circle cx="232" cy="54" r="3.5" fill="#d98a8f"/>
+          <!-- planta no alto da estante -->
+          <g>
+            <path d="M121 154 C112 134 100 130 94 118" stroke="#3b8250" stroke-width="5" stroke-linecap="round" fill="none"/>
+            <path d="M121 154 C122 130 116 118 118 104" stroke="#2f6b43" stroke-width="5" stroke-linecap="round" fill="none"/>
+            <path d="M121 154 C132 134 144 130 150 118" stroke="#3b8250" stroke-width="5" stroke-linecap="round" fill="none"/>
+            <path d="M121 154 C130 142 138 144 142 138" stroke="#4f9a62" stroke-width="4" stroke-linecap="round" fill="none"/>
+            <path d="M102 140 H140 L136 160 H106 Z" fill="#b98757"/>
+            <rect x="99" y="136" width="44" height="7" rx="2" fill="#cf9d6a"/>
+          </g>
           <!-- gato com rabo animado -->
-          <svg width="132" height="118" viewBox="0 0 132 118" role="img" aria-label="Gato laranja sentado na estante">
+          <g transform="translate(236 50) scale(.93)">
             <g class="tail">
               <path d="M36 100 C6 102 -2 66 18 52" fill="none" stroke="#d9894a" stroke-width="11" stroke-linecap="round"/>
               <path d="M14 58 C12 54 14 52 18 50" fill="none" stroke="#f3dcc0" stroke-width="11" stroke-linecap="round"/>
@@ -210,62 +291,200 @@ textarea{min-height:130px;resize:vertical;line-height:1.5}
             <ellipse cx="54" cy="112" rx="11" ry="6" fill="#f3dcc0"/>
             <ellipse cx="82" cy="112" rx="11" ry="6" fill="#f3dcc0"/>
             <circle cx="68" cy="40" r="22" fill="#d9894a"/>
-            <path d="M48 30 L50 6 L66 20 Z" fill="#d9894a"/>
-            <path d="M88 30 L86 6 L70 20 Z" fill="#d9894a"/>
-            <path d="M52 24 L53 13 L61 20 Z" fill="#e9a6a0"/>
-            <path d="M84 24 L83 13 L75 20 Z" fill="#e9a6a0"/>
+            <path d="M48 30 L50 6 L66 20 Z" fill="#d9894a"/><path d="M88 30 L86 6 L70 20 Z" fill="#d9894a"/>
+            <path d="M52 24 L53 13 L61 20 Z" fill="#e9a6a0"/><path d="M84 24 L83 13 L75 20 Z" fill="#e9a6a0"/>
             <g class="blink"><ellipse cx="59" cy="40" rx="4.2" ry="5" fill="#f5d56b"/><ellipse cx="59" cy="40" rx="1.7" ry="4" fill="#2a1a07"/></g>
             <g class="blink"><ellipse cx="77" cy="40" rx="4.2" ry="5" fill="#f5d56b"/><ellipse cx="77" cy="40" rx="1.7" ry="4" fill="#2a1a07"/></g>
             <path d="M65.5 47 h5 l-2.5 3 Z" fill="#d97b86"/>
             <path d="M68 50 v3 M63 54 q5 3 5 -1 q0 4 5 1" stroke="#7a3f1d" stroke-width="1.3" fill="none" stroke-linecap="round"/>
             <path d="M46 46 l-12 -3 M46 50 l-12 2 M90 46 l12 -3 M90 50 l12 2" stroke="#f3dcc0" stroke-width="1.2" stroke-linecap="round"/>
-          </svg>
+          </g>
+          <!-- tampo da estante -->
+          <rect x="0" y="160" width="360" height="10" fill="url(#cap)"/>
+        </svg>
 
-          <!-- xícara com fumaça -->
-          <svg width="96" height="110" viewBox="0 0 96 110" role="img" aria-label="Xícara de chá fumegante">
-            <path class="steam" d="M34 48 C27 38 40 31 34 20 C30 12 38 8 35 0"/>
-            <path class="steam s2" d="M48 48 C41 38 54 31 48 20 C44 12 52 8 49 0"/>
-            <path class="steam s3" d="M62 48 C55 38 68 31 62 20 C58 12 66 8 63 0"/>
-            <path d="M70 62 C88 60 88 84 68 84" fill="none" stroke="#d8e4ea" stroke-width="5" stroke-linecap="round"/>
-            <path d="M18 54 H72 V72 C72 86 62 96 45 96 C28 96 18 86 18 72 Z" fill="#eaf2f5"/>
-            <ellipse cx="45" cy="54" rx="27" ry="5" fill="#8a5a33"/>
-            <path d="M24 66 C24 78 30 86 40 90" fill="none" stroke="#a9c3cf" stroke-width="3" stroke-linecap="round" opacity=".7"/>
-            <ellipse cx="45" cy="99" rx="38" ry="7" fill="#c9dbe3"/>
-            <ellipse cx="45" cy="97" rx="30" ry="4.5" fill="#dcebf0"/>
-          </svg>
+        <div class="case">
+          <div id="shelves"></div>
+          <div class="ivy" id="ivyA" style="right:8px;top:0;width:70px;height:300px" aria-hidden="true"></div>
+          <div class="ivy" id="ivyB" style="left:34%;top:0;width:54px;height:150px" aria-hidden="true"></div>
         </div>
-        <div class="plank"></div>
 
-        <div id="shelves"></div>
-        <p class="hint">Toque na lombada de um livro para escrever o título e o autor.</p>
+        <!-- parte de baixo: cadeira de vime, mesinha com café, samambaia e luminária -->
+        <svg viewBox="0 0 360 210" role="img" aria-label="Poltrona de vime, mesinha com uma xícara de café fumegante, samambaia e abajur aceso">
+          <defs>
+            <linearGradient id="floorg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a2f1a"/><stop offset="1" stop-color="#2a1a0e"/></linearGradient>
+            <radialGradient id="lampglow"><stop offset="0" stop-color="rgba(255,205,120,.6)"/><stop offset="1" stop-color="rgba(255,205,120,0)"/></radialGradient>
+          </defs>
+          <!-- lambri e piso -->
+          <rect x="0" y="94" width="360" height="72" fill="#0f2118"/>
+          <rect x="0" y="92" width="360" height="5" fill="#5a3a22"/>
+          <g fill="none" stroke="#244030" stroke-width="2"><rect x="12" y="106" width="100" height="52"/><rect x="130" y="106" width="100" height="52"/><rect x="248" y="106" width="100" height="52"/></g>
+          <rect x="0" y="166" width="360" height="44" fill="url(#floorg)"/>
+          <path d="M0 180 H360 M0 194 H360" stroke="rgba(0,0,0,.3)" stroke-width="1.5"/>
+          <!-- tapete -->
+          <ellipse cx="180" cy="192" rx="172" ry="15" fill="#4a2f2c"/>
+          <ellipse cx="180" cy="192" rx="150" ry="10" fill="none" stroke="#c9a35a" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <!-- abajur -->
+          <circle class="glow" cx="36" cy="66" r="62" fill="url(#lampglow)"/>
+          <line x1="36" y1="80" x2="36" y2="190" stroke="#b58a3c" stroke-width="3"/>
+          <ellipse cx="36" cy="192" rx="14" ry="4" fill="#3a2a1c"/>
+          <path d="M12 44 H60 L68 82 H4 Z" fill="#f0cf8a"/>
+          <path d="M6 82 v6 M14 82 v5 M22 82 v6 M30 82 v5 M38 82 v6 M46 82 v5 M54 82 v6 M62 82 v5" stroke="#d9b36a" stroke-width="2" stroke-linecap="round"/>
+          <!-- poltrona de vime -->
+          <rect x="100" y="172" width="7" height="22" fill="#6a431f"/><rect x="193" y="172" width="7" height="22" fill="#6a431f"/>
+          <path d="M92 168 C88 120 92 70 150 58 C208 70 212 120 208 168 Z" fill="#8b5a2b" stroke="#5e3a1b" stroke-width="3"/>
+          <g stroke="#c28f4c" stroke-width="2" opacity=".75">
+            <path d="M108 78 V166 M120 68 V166 M132 62 V166 M144 59 V166 M156 59 V166 M168 62 V166 M180 68 V166 M192 78 V166"/>
+          </g>
+          <rect x="82" y="128" width="22" height="15" rx="7" fill="#7a4d22"/><rect x="196" y="128" width="22" height="15" rx="7" fill="#7a4d22"/>
+          <rect x="98" y="146" width="104" height="19" rx="8" fill="#efe6d2" stroke="#cdbf9f" stroke-width="1.5"/>
+          <circle cx="124" cy="155" r="1.8" fill="#b8a98a"/><circle cx="150" cy="155" r="1.8" fill="#b8a98a"/><circle cx="176" cy="155" r="1.8" fill="#b8a98a"/>
+          <rect x="94" y="164" width="112" height="9" rx="3" fill="#8b5a2b"/>
+          <!-- almofada floral -->
+          <g transform="rotate(-10 132 116)">
+            <rect x="108" y="92" width="50" height="46" rx="8" fill="#d8c8a6" stroke="#b8a57d"/>
+            <circle cx="122" cy="104" r="4" fill="#b5485a"/><circle cx="144" cy="116" r="4" fill="#b5485a"/>
+            <circle cx="128" cy="127" r="3" fill="#4f7a53"/><circle cx="146" cy="100" r="3" fill="#4f7a53"/><circle cx="118" cy="118" r="2.5" fill="#d98a8f"/>
+          </g>
+          <!-- manta verde -->
+          <path d="M178 84 C198 90 216 112 212 152 L194 154 C196 126 186 106 170 100 Z" fill="#4f6a54"/>
+          <path d="M196 154 v8 M200 154 v8 M204 154 v8 M208 154 v8" stroke="#4f6a54" stroke-width="2" stroke-linecap="round"/>
+          <!-- mesinha -->
+          <path d="M256 132 L250 192 M300 132 L306 192 M278 136 V196" stroke="#5a3720" stroke-width="4" stroke-linecap="round"/>
+          <ellipse cx="278" cy="172" rx="26" ry="4.5" fill="none" stroke="#5a3720" stroke-width="3"/>
+          <ellipse cx="278" cy="128" rx="35" ry="7" fill="#8a5a33" stroke="#5a3720" stroke-width="2"/>
+          <rect x="258" y="120" width="40" height="6" rx="1" fill="#7a3a2c"/>
+          <rect x="260" y="115" width="36" height="5" rx="1" fill="#4f6a54"/>
+          <!-- xícara de café com vapor -->
+          <path class="steam" d="M272 88 C266 78 278 72 272 62 C268 56 274 52 272 46"/>
+          <path class="steam s2" d="M279 88 C273 78 285 72 279 62 C275 56 281 52 279 46"/>
+          <path class="steam s3" d="M286 88 C280 78 292 72 286 62 C282 56 288 52 286 46"/>
+          <path d="M292 98 C304 98 304 114 291 114" fill="none" stroke="#f4ebdc" stroke-width="4" stroke-linecap="round"/>
+          <rect x="266" y="92" width="26" height="23" rx="4" fill="#f4ebdc" stroke="#cdbf9f"/>
+          <rect x="266" y="103" width="26" height="4" fill="#3e6f8a"/>
+          <ellipse cx="279" cy="93" rx="12" ry="3" fill="#3b2314"/>
+          <!-- samambaia -->
+          <g stroke-linecap="round" fill="none">
+            <path d="M334 168 C318 140 300 142 290 152" stroke="#2f7a45" stroke-width="5"/>
+            <path d="M334 168 C330 136 316 126 304 128" stroke="#3b8f55" stroke-width="5"/>
+            <path d="M334 168 C336 132 340 118 336 104" stroke="#2a6a3c" stroke-width="5"/>
+            <path d="M334 168 C346 140 356 136 360 124" stroke="#3b8f55" stroke-width="5"/>
+            <path d="M334 168 C324 150 322 146 312 146" stroke="#4fa468" stroke-width="4"/>
+          </g>
+          <path d="M318 166 H350 L346 194 H322 Z" fill="#efe6d2"/>
+          <circle cx="328" cy="178" r="3" fill="#b5485a"/><circle cx="340" cy="184" r="3" fill="#b5485a"/><circle cx="334" cy="174" r="2" fill="#4f7a53"/>
+        </svg>
+      </div>
+      <p class="hint">Toque na lombada de um livro para escrever o título e o autor.</p>
+    </section>
+
+    <!-- MÊS -->
+    <section id="v-month" hidden>
+      <h1>Rastreador mensal</h1>
+      <div class="yearnav">
+        <button type="button" id="yPrev" aria-label="Ano anterior">‹</button>
+        <strong id="yLabel" style="font-size:22px"></strong>
+        <button type="button" id="yNext" aria-label="Próximo ano">›</button>
+      </div>
+      <div class="months" id="months"></div>
+      <div id="monthDetail"></div>
+    </section>
+
+    <!-- DESAFIOS -->
+    <section id="v-challenges" hidden>
+      <h1>Desafios de leitura</h1>
+      <div class="panel">
+        <h3>Meta do ano <span id="chYear"></span></h3>
+        <div class="goal">
+          <label for="goalInput">Quero ler</label>
+          <input id="goalInput" type="number" min="0" max="999" inputmode="numeric" style="padding:7px 10px;border:1px solid var(--line);border-radius:8px;font-size:18px">
+          <span>livros</span>
+          <button class="btn" id="goalSave" type="button">Salvar meta</button>
+        </div>
+        <div class="bar" role="progressbar" aria-label="Progresso da meta" id="goalBar"><i id="goalFill" style="width:0%"></i></div>
+        <p class="sub" id="goalText" style="margin:6px 0 0"></p>
+      </div>
+      <div class="panel">
+        <h3>Livros lidos por mês</h3>
+        <div class="chart" id="chart"></div>
+      </div>
+      <div class="panel">
+        <h3>Variedade</h3>
+        <p id="genreText" style="margin:0"></p>
       </div>
     </section>
 
-    <!-- BIBLIOTECA -->
-    <section id="viewLibrary" hidden>
-      <div class="bar">
-        <div>
-          <h1>Livros que li</h1>
-          <div class="count" id="libCount"></div>
-        </div>
-        <button class="btn primary" id="btnAddBook" type="button">Adicionar livro</button>
+    <!-- EXTRAS -->
+    <section id="v-extras" hidden>
+      <h1>Extras</h1>
+      <div class="panel">
+        <h3>Números da sua biblioteca</h3>
+        <div class="chips" id="stats"></div>
+        <p class="sub" id="topGenres" style="margin:4px 0 0"></p>
       </div>
-      <div class="tabs" id="tabs" role="tablist" aria-label="Abas da biblioteca"></div>
-      <div class="tools">
-        <button class="link" id="btnRenamePage" type="button">Renomear aba</button>
-        <button class="link" id="btnDeletePage" type="button">Excluir aba</button>
+      <div class="panel">
+        <h3>Citações favoritas</h3>
+        <div id="quotes"></div>
       </div>
-      <div class="grid" id="grid"></div>
+      <div class="panel">
+        <h3>Conta</h3>
+        <p class="sub" id="whoami" style="margin:0 0 8px"></p>
+        <button class="btn" id="btnOut" type="button">Sair</button>
+      </div>
     </section>
-  </main>
 
-  <nav class="nav" aria-label="Seções">
-    <button type="button" id="navShelf" aria-current="page">Estante</button>
-    <button type="button" id="navLib">Livros que li</button>
+    <!-- FICHA DO LIVRO -->
+    <section id="v-review" hidden>
+      <button class="back" id="btnBack" type="button">‹ Biblioteca</button>
+      <h1 id="rHead" style="margin-bottom:12px">Ficha do livro</h1>
+      <form id="reviewForm">
+        <div class="rev-top">
+          <div>
+            <label class="pick" id="rPick"><span id="rPickTxt">Adicionar capa</span><input id="rFile" type="file" accept="image/*"></label>
+            <div class="rate" id="rRate" role="group" aria-label="Nota em estrelas"></div>
+          </div>
+          <div class="info">
+            <div class="fld"><label for="rTitle">Título</label><input id="rTitle" type="text" maxlength="160" required autocomplete="off"></div>
+            <div class="fld"><label for="rAuthor">Autor</label><input id="rAuthor" type="text" maxlength="120" autocomplete="off"></div>
+            <div class="fld"><label for="rGenre">Gênero</label><input id="rGenre" type="text" maxlength="60" list="genres" autocomplete="off"></div>
+            <div class="fld"><label for="rStart">Comecei</label><input id="rStart" type="date"></div>
+            <div class="fld"><label for="rEnd">Li em</label><input id="rEnd" type="date"></div>
+            <div class="fld"><label for="rTime">Demorei</label><input id="rTime" type="text" maxlength="60" placeholder="ex.: 12 dias" autocomplete="off"></div>
+            <div class="fld"><label for="rPages">Páginas</label><input id="rPages" type="number" min="0" max="9999" inputmode="numeric"></div>
+            <div class="fld"><label>Formato</label>
+              <div class="fmt">
+                <label><input type="radio" name="fmt" value="fisico"> Físico</label>
+                <label><input type="radio" name="fmt" value="ebook"> E-book</label>
+                <label><input type="radio" name="fmt" value="audio"> Audiolivro</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="cards">
+          <div class="card"><h3>Resumo</h3><textarea id="rSummary" maxlength="6000"></textarea></div>
+          <div class="card"><h3>Minha resenha</h3><textarea id="rReview" maxlength="6000"></textarea></div>
+          <div class="card"><h3>Citações</h3><textarea id="rQuotes" maxlength="4000" placeholder="Uma citação por linha"></textarea></div>
+          <div class="card"><h3>Tropos</h3><textarea id="rTropes" maxlength="2000" placeholder="Um por linha"></textarea></div>
+        </div>
+        <div class="savebar">
+          <button class="btn danger" type="button" id="rDelete">Excluir livro</button>
+          <span class="spacer"></span>
+          <button class="btn primary" type="submit" id="rSave">Salvar</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <!-- abas na lateral, como no vídeo -->
+  <nav class="tabs" aria-label="Menu">
+    <button type="button" data-go="library">Biblioteca</button>
+    <button type="button" data-go="shelf">Estante</button>
+    <button type="button" data-go="month">Mês</button>
+    <button type="button" data-go="challenges">Desafios</button>
+    <button type="button" data-go="extras">Extras</button>
   </nav>
 </div>
 
-<!-- Janela: lombada da estante -->
 <dialog id="slotDlg">
   <form class="dlg" id="slotForm">
     <h2>Livro na estante</h2>
@@ -276,39 +495,6 @@ textarea{min-height:130px;resize:vertical;line-height:1.5}
       <span class="spacer"></span>
       <button class="btn" type="button" id="sCancel">Cancelar</button>
       <button class="btn primary" type="submit">Salvar</button>
-    </div>
-  </form>
-</dialog>
-
-<!-- Janela: livro lido -->
-<dialog id="bookDlg">
-  <form class="dlg" id="bookForm">
-    <h2 id="bHead">Novo livro</h2>
-    <div class="head">
-      <label class="pick" id="bPick">
-        <span id="bPickTxt">Adicionar capa</span>
-        <input id="bFile" type="file" accept="image/*">
-      </label>
-      <div style="display:grid;gap:10px">
-        <label class="f">Nome do livro<input id="bTitle" type="text" maxlength="160" required autocomplete="off"></label>
-        <label class="f">Autor<input id="bAuthor" type="text" maxlength="120" autocomplete="off"></label>
-      </div>
-    </div>
-    <div class="two">
-      <label class="f">Gênero<input id="bGenre" type="text" maxlength="60" list="genres" autocomplete="off"></label>
-      <label class="f">Data em que li<input id="bDate" type="date"></label>
-    </div>
-    <label class="f">Tempo que demorei para ler<input id="bTime" type="text" maxlength="60" placeholder="ex.: 12 dias" autocomplete="off"></label>
-    <div>
-      <div style="font-size:13px;color:var(--muted);font-weight:600;margin-bottom:2px">Nota</div>
-      <div class="rate" id="bRate" role="group" aria-label="Nota em estrelas"></div>
-    </div>
-    <label class="f">Resumo<textarea id="bSummary" maxlength="6000"></textarea></label>
-    <div class="actions">
-      <button class="btn danger" type="button" id="bDelete">Excluir</button>
-      <span class="spacer"></span>
-      <button class="btn" type="button" id="bCancel">Fechar</button>
-      <button class="btn primary" type="submit" id="bSave">Salvar</button>
     </div>
   </form>
 </dialog>
@@ -330,12 +516,12 @@ textarea{min-height:130px;resize:vertical;line-height:1.5}
 /* ====================== utilidades ====================== */
 const $ = (s, el = document) => el.querySelector(s);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const PER_ROW = 9;          // lombadas por prateleira
-const MIN_ROWS = 4;         // prateleiras mínimas (sempre sobra uma vazia no fim)
-const PAGE_CAP = 100;       // livros por aba
+const PER_ROW = 9, MIN_ROWS = 5, PAGE_CAP = 100;
 const PALETTE = ["#7a2e2a", "#2f4a63", "#5b4a2a", "#2e5a46", "#6a3a52", "#8a5a2b", "#3b3f66", "#58603a", "#8c3b2e", "#2b4f55"];
 const HEIGHTS = [88, 94, 100, 91, 97, 86, 99, 93, 96];
+const MONTHS = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
 const colorOf = (n) => PALETTE[(n * 7 + 3) % PALETTE.length];
+const ymd = (s) => (s ? s.split("-").map(Number) : [null, null, null]);
 
 let toastTimer;
 function toast(text, isErr = false) {
@@ -344,55 +530,63 @@ function toast(text, isErr = false) {
   t.className = "toast" + (isErr ? " err" : "");
   t.hidden = false;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => (t.hidden = true), isErr ? 5000 : 2400);
+  toastTimer = setTimeout(() => (t.hidden = true), isErr ? 6000 : 2400);
+}
+
+/* hera decorativa gerada em código */
+function ivySvg(w, h, seed) {
+  let r = seed * 977;
+  const rnd = () => (r = (r * 9301 + 49297) % 233280) / 233280;
+  const step = 20, n = Math.floor(h / step);
+  let x = w / 2, d = `M${x} 0`, leaves = "";
+  for (let i = 1; i <= n; i++) {
+    const y = i * step;
+    const nx = w / 2 + Math.sin(i * 0.65 + seed) * w * 0.3;
+    d += ` Q${(x + nx) / 2 + (rnd() - 0.5) * 8} ${y - step / 2} ${nx} ${y}`;
+    x = nx;
+    const side = i % 2 ? 1 : -1;
+    const rot = side * (25 + rnd() * 45);
+    const cx = nx + side * 8;
+    leaves += `<ellipse cx="${cx.toFixed(1)}" cy="${y}" rx="9" ry="5" transform="rotate(${rot.toFixed(0)} ${cx.toFixed(1)} ${y})" fill="${rnd() > 0.5 ? "#3b8250" : "#2f6b43"}"/>`;
+  }
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><path d="${d}" fill="none" stroke="#2a5a39" stroke-width="2"/>${leaves}</svg>`;
 }
 
 /* ====================== estado ====================== */
 const cfg = window.APP_CONFIG || {};
-let sb = null;
-let user = null;
-let slots = new Map();   // slot -> {title, author}
-let pages = [];          // abas
-let books = [];          // livros lidos
-let currentPage = null;
-let editingSlot = null;
-let editingBook = null;
-let pendingFile = null;
-let rating = 0;
+let sb = null, user = null;
+let slots = new Map(), pages = [], books = [];
+let currentPage = null, editingSlot = null, editingBook = null, pendingFile = null, rating = 0;
+let yearGoal = 0, monthYear = new Date().getFullYear(), monthSel = null, view = "library";
 
 /* ====================== início ====================== */
 init();
-
 async function init() {
   if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY || cfg.SUPABASE_URL.includes("COLE_AQUI") || !window.supabase) {
     $("#setup").hidden = false;
     return;
   }
   sb = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
-  sb.auth.onAuthStateChange((_event, session) => { handleSession(session); });
+  sb.auth.onAuthStateChange((_e, session) => { handleSession(session); });
   const { data } = await sb.auth.getSession();
   handleSession(data.session);
 }
-
 async function handleSession(session) {
   const u = session?.user || null;
   if (u && user && u.id === user.id) return;
   user = u;
   if (!user) {
     slots = new Map(); pages = []; books = []; currentPage = null;
-    $("#app").hidden = true;
-    $("#auth").hidden = false;
+    $("#app").hidden = true; $("#auth").hidden = false;
     return;
   }
-  $("#auth").hidden = true;
-  $("#app").hidden = false;
+  $("#auth").hidden = true; $("#app").hidden = false;
   await loadAll();
 }
 
 /* ====================== login ====================== */
 const authMsg = (t) => ($("#authMsg").textContent = t);
 const creds = () => ({ email: $("#email").value.trim(), password: $("#password").value });
-
 $("#authForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const { email, password } = creds();
@@ -401,7 +595,6 @@ $("#authForm").addEventListener("submit", async (e) => {
   const { error } = await sb.auth.signInWithPassword({ email, password });
   authMsg(error ? "Não foi possível entrar: e-mail ou senha incorretos." : "");
 });
-
 $("#btnUp").addEventListener("click", async () => {
   const { email, password } = creds();
   if (!email || password.length < 6) return authMsg("Informe um e-mail e uma senha com 6 ou mais caracteres.");
@@ -410,7 +603,6 @@ $("#btnUp").addEventListener("click", async () => {
   if (error) return authMsg("Não foi possível criar a conta: " + error.message);
   authMsg(data.session ? "" : "Conta criada. Confirme pelo link enviado ao seu e-mail e depois entre.");
 });
-
 $("#btnMagic").addEventListener("click", async () => {
   const { email } = creds();
   if (!email) return authMsg("Digite seu e-mail primeiro.");
@@ -418,56 +610,58 @@ $("#btnMagic").addEventListener("click", async () => {
   const { error } = await sb.auth.signInWithOtp({ email, options: { emailRedirectTo: location.origin + location.pathname } });
   authMsg(error ? "Não foi possível enviar o link: " + error.message : "Link enviado. Abra o e-mail neste aparelho e toque nele.");
 });
-
 $("#btnOut").addEventListener("click", () => sb.auth.signOut());
 
 /* ====================== carregar dados ====================== */
 async function loadAll() {
-  const [s, p, b] = await Promise.all([
+  const [s, p, b, g] = await Promise.all([
     sb.from("shelf_slots").select("slot,title,author"),
     sb.from("library_pages").select("*").order("position").order("created_at"),
     sb.from("books").select("*").order("created_at"),
+    sb.from("user_settings").select("yearly_goal").maybeSingle(),
   ]);
   const failed = s.error || p.error || b.error;
-  if (failed) {
-    toast("Erro ao carregar. Confira se rodou o supabase.sql. (" + failed.message + ")", true);
-    return;
-  }
+  if (failed) { toast("Erro ao carregar: " + failed.message, true); return; }
   slots = new Map(s.data.map((r) => [r.slot, r]));
-  pages = p.data;
-  books = b.data;
+  pages = p.data; books = b.data;
+  yearGoal = g.error ? Number(localStorage.getItem("yearly_goal") || 0) : g.data?.yearly_goal || 0;
   if (!pages.length) await createPage("Página 1");
   if (!pages.find((x) => x.id === currentPage)) currentPage = pages[0]?.id || null;
-  renderShelf();
-  renderLibrary();
+  $("#whoami").textContent = "Conectado como " + (user.email || "");
+  go(view === "review" ? "library" : view);
 }
 
-/* ====================== navegação ====================== */
-function showView(name) {
-  const shelf = name === "shelf";
-  $("#viewShelf").hidden = !shelf;
-  $("#viewLibrary").hidden = shelf;
-  $("#navShelf").toggleAttribute("aria-current", shelf);
-  $("#navLib").toggleAttribute("aria-current", !shelf);
-  if (shelf) $("#navShelf").setAttribute("aria-current", "page");
-  else $("#navLib").setAttribute("aria-current", "page");
+/* ====================== navegação (abas laterais) ====================== */
+function go(name) {
+  view = name;
+  for (const id of ["library", "shelf", "month", "challenges", "extras", "review"]) $("#v-" + id).hidden = id !== name;
+  const tab = name === "review" ? "library" : name;
+  for (const b of document.querySelectorAll(".tabs button")) {
+    if (b.dataset.go === tab) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+  }
+  if (name === "library") renderLibrary();
+  if (name === "shelf") renderShelf();
+  if (name === "month") renderMonths();
+  if (name === "challenges") renderChallenges();
+  if (name === "extras") renderExtras();
   scrollTo({ top: 0 });
 }
-$("#navShelf").addEventListener("click", () => showView("shelf"));
-$("#navLib").addEventListener("click", () => showView("library"));
+document.querySelector(".tabs").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-go]");
+  if (b) go(b.dataset.go);
+});
 
 /* ====================== estante ====================== */
 function renderShelf() {
-  const maxSlot = Math.max(-1, ...[...slots.entries()].filter(([, v]) => v.title || v.author).map(([k]) => k));
+  const used = [...slots.entries()].filter(([, v]) => v.title || v.author).map(([k]) => k);
+  const maxSlot = Math.max(-1, ...used);
   const rows = Math.max(MIN_ROWS, Math.floor(maxSlot / PER_ROW) + 2);
   let html = "";
   for (let r = 0; r < rows; r++) {
     html += '<div class="row"><div class="books">';
     for (let c = 0; c < PER_ROW; c++) {
-      const n = r * PER_ROW + c;
-      const v = slots.get(n);
-      const filled = v && (v.title || v.author);
-      if (filled) {
+      const n = r * PER_ROW + c, v = slots.get(n);
+      if (v && (v.title || v.author)) {
         const label = v.title + (v.author ? " — " + v.author : "");
         html += `<button type="button" class="spine" data-slot="${n}" style="--c:${colorOf(n)};--h:${HEIGHTS[(n + r) % HEIGHTS.length]}%" title="${esc(label)}" aria-label="${esc(label)}"><span>${esc(v.title || v.author)}</span></button>`;
       } else {
@@ -477,8 +671,11 @@ function renderShelf() {
     html += '</div><div class="plank"></div></div>';
   }
   $("#shelves").innerHTML = html;
+  const h = $("#shelves").offsetHeight || rows * 134;
+  const a = $("#ivyA"), b = $("#ivyB");
+  a.style.height = Math.min(h, 330) + "px"; a.innerHTML = ivySvg(70, Math.min(h, 330), 2);
+  b.style.height = Math.min(h * 0.5, 190) + "px"; b.innerHTML = ivySvg(54, Math.min(h * 0.5, 190), 5);
 }
-
 $("#shelves").addEventListener("click", (e) => {
   const b = e.target.closest(".spine");
   if (!b) return;
@@ -490,16 +687,13 @@ $("#shelves").addEventListener("click", (e) => {
   $("#slotDlg").showModal();
   $("#sTitle").focus();
 });
-
 $("#slotForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const title = $("#sTitle").value.trim();
-  const author = $("#sAuthor").value.trim();
+  const title = $("#sTitle").value.trim(), author = $("#sAuthor").value.trim();
   if (!title && !author) return clearSlot();
   const { error } = await sb.from("shelf_slots").upsert(
     { user_id: user.id, slot: editingSlot, title, author, updated_at: new Date().toISOString() },
-    { onConflict: "user_id,slot" }
-  );
+    { onConflict: "user_id,slot" });
   if (error) return toast("Não foi possível salvar: " + error.message, true);
   slots.set(editingSlot, { slot: editingSlot, title, author });
   $("#slotDlg").close();
@@ -507,7 +701,6 @@ $("#slotForm").addEventListener("submit", async (e) => {
 });
 $("#sClear").addEventListener("click", clearSlot);
 $("#sCancel").addEventListener("click", () => $("#slotDlg").close());
-
 async function clearSlot() {
   const { error } = await sb.from("shelf_slots").delete().eq("slot", editingSlot);
   if (error) return toast("Não foi possível limpar: " + error.message, true);
@@ -519,33 +712,31 @@ async function clearSlot() {
 /* ====================== biblioteca ====================== */
 const coverUrl = (path) => sb.storage.from("covers").getPublicUrl(path).data.publicUrl;
 const starsHtml = (n) => `<span class="on">${"★".repeat(n)}</span><span class="off">${"★".repeat(5 - n)}</span>`;
-const booksIn = (pageId) => books.filter((b) => b.page_id === pageId);
+const booksIn = (pid) => books.filter((b) => b.page_id === pid);
 
 function renderLibrary() {
-  $("#tabs").innerHTML =
-    pages.map((p) => `<button type="button" class="tab" role="tab" data-page="${p.id}" aria-selected="${p.id === currentPage}">${esc(p.name)}</button>`).join("") +
-    '<button type="button" class="tab" id="tabNew" aria-label="Criar nova aba">+ Nova aba</button>';
-
+  $("#pager").innerHTML =
+    pages.map((p, i) => `<button type="button" role="tab" data-page="${p.id}" title="${esc(p.name)}" aria-selected="${p.id === currentPage}">${i + 1}</button>`).join("") +
+    '<button type="button" class="add" id="pgNew" aria-label="Criar nova página" title="Nova página">+</button>';
   const list = booksIn(currentPage);
-  $("#libCount").textContent = `${list.length} de ${PAGE_CAP} nesta aba · ${books.length} no total`;
+  const page = pages.find((p) => p.id === currentPage);
+  $("#libCount").textContent = `${page ? page.name + " · " : ""}${list.length} de ${PAGE_CAP} · ${books.length} no total`;
   $("#btnDeletePage").hidden = pages.length < 2;
-
-  if (!list.length) {
-    $("#grid").innerHTML = '<div class="empty-state" style="grid-column:1/-1">Nenhum livro nesta aba ainda. Toque em “Adicionar livro” para colocar a primeira capa.</div>';
-    return;
-  }
-  $("#grid").innerHTML = list.map((b, i) => `
+  const tiles = list.map((b, i) => `
     <button type="button" class="cover" data-book="${b.id}" aria-label="${esc(b.title)}, nota ${b.rating} de 5">
       <div class="img">${b.cover_path
         ? `<img src="${esc(coverUrl(b.cover_path))}" alt="Capa de ${esc(b.title)}" loading="lazy">`
         : `<div class="ph" style="--c:${colorOf(i + 2)}">${esc(b.title)}</div>`}</div>
       <div class="stars" aria-hidden="true">${starsHtml(b.rating)}</div>
     </button>`).join("");
+  $("#grid").innerHTML = tiles + `
+    <button type="button" class="cover slot-add" id="tileAdd" aria-label="Adicionar livro">
+      <div class="img">+</div><div class="stars" aria-hidden="true">${starsHtml(0)}</div>
+    </button>`;
 }
-
-$("#tabs").addEventListener("click", async (e) => {
-  if (e.target.closest("#tabNew")) {
-    const name = prompt("Nome da nova aba:", `Página ${pages.length + 1}`);
+$("#pager").addEventListener("click", async (e) => {
+  if (e.target.closest("#pgNew")) {
+    const name = prompt("Nome da nova página:", `Página ${pages.length + 1}`);
     if (!name || !name.trim()) return;
     const p = await createPage(name.trim());
     if (p) { currentPage = p.id; renderLibrary(); }
@@ -554,33 +745,26 @@ $("#tabs").addEventListener("click", async (e) => {
   const t = e.target.closest("[data-page]");
   if (t) { currentPage = t.dataset.page; renderLibrary(); }
 });
-
 async function createPage(name) {
-  const { data, error } = await sb.from("library_pages")
-    .insert({ user_id: user.id, name, position: pages.length }).select().single();
-  if (error) { toast("Não foi possível criar a aba: " + error.message, true); return null; }
+  const { data, error } = await sb.from("library_pages").insert({ user_id: user.id, name, position: pages.length }).select().single();
+  if (error) { toast("Não foi possível criar a página: " + error.message, true); return null; }
   pages.push(data);
   if (!currentPage) currentPage = data.id;
   return data;
 }
-
 $("#btnRenamePage").addEventListener("click", async () => {
   const p = pages.find((x) => x.id === currentPage);
-  const name = prompt("Novo nome da aba:", p?.name || "");
+  const name = prompt("Novo nome da página:", p?.name || "");
   if (!name || !name.trim() || !p) return;
   const { error } = await sb.from("library_pages").update({ name: name.trim() }).eq("id", p.id);
   if (error) return toast("Não foi possível renomear: " + error.message, true);
   p.name = name.trim();
   renderLibrary();
 });
-
 $("#btnDeletePage").addEventListener("click", async () => {
-  if (pages.length < 2) return toast("Mantenha pelo menos uma aba.", true);
-  const p = pages.find((x) => x.id === currentPage);
-  const list = booksIn(currentPage);
-  const ok = confirm(list.length
-    ? `Excluir a aba “${p.name}” e os ${list.length} livros dela? Isso não pode ser desfeito.`
-    : `Excluir a aba “${p.name}”?`);
+  if (pages.length < 2) return toast("Mantenha pelo menos uma página.", true);
+  const p = pages.find((x) => x.id === currentPage), list = booksIn(currentPage);
+  const ok = confirm(list.length ? `Excluir a página “${p.name}” e os ${list.length} livros dela? Isso não pode ser desfeito.` : `Excluir a página “${p.name}”?`);
   if (!ok) return;
   const paths = list.map((b) => b.cover_path).filter(Boolean);
   const { error } = await sb.from("library_pages").delete().eq("id", p.id);
@@ -591,104 +775,98 @@ $("#btnDeletePage").addEventListener("click", async () => {
   currentPage = pages[0].id;
   renderLibrary();
 });
+$("#grid").addEventListener("click", (e) => {
+  if (e.target.closest("#tileAdd")) return openBook(null);
+  const c = e.target.closest("[data-book]");
+  if (c) openBook(c.dataset.book);
+});
 
-/* ====================== janela do livro ====================== */
+/* ====================== ficha do livro ====================== */
 function paintRating() {
-  $("#bRate").innerHTML = [1, 2, 3, 4, 5]
-    .map((n) => `<button type="button" data-n="${n}" class="${n <= rating ? "on" : ""}" aria-label="${n} ${n === 1 ? "estrela" : "estrelas"}" aria-pressed="${n <= rating}">★</button>`).join("");
+  $("#rRate").innerHTML = [1, 2, 3, 4, 5].map((n) =>
+    `<button type="button" data-n="${n}" class="${n <= rating ? "on" : ""}" aria-label="${n} ${n === 1 ? "estrela" : "estrelas"}" aria-pressed="${n <= rating}">★</button>`).join("");
 }
-$("#bRate").addEventListener("click", (e) => {
+$("#rRate").addEventListener("click", (e) => {
   const b = e.target.closest("[data-n]");
   if (!b) return;
   const n = Number(b.dataset.n);
   rating = rating === n ? 0 : n;
   paintRating();
 });
-
 function setPreview(url) {
-  const pick = $("#bPick");
+  const pick = $("#rPick");
   pick.querySelector("img")?.remove();
   if (url) {
     const img = document.createElement("img");
     img.src = url; img.alt = "Capa do livro";
     pick.prepend(img);
-    $("#bPickTxt").hidden = true;
-  } else {
-    $("#bPickTxt").hidden = false;
-  }
+    $("#rPickTxt").hidden = true;
+  } else $("#rPickTxt").hidden = false;
 }
-
-$("#bFile").addEventListener("change", (e) => {
+$("#rFile").addEventListener("change", (e) => {
   const f = e.target.files[0];
   if (!f) return;
   pendingFile = f;
   setPreview(URL.createObjectURL(f));
 });
-
 function openBook(id) {
   editingBook = id ? books.find((b) => b.id === id) : null;
   pendingFile = null;
-  $("#bFile").value = "";
-  $("#bHead").textContent = editingBook ? "Detalhes do livro" : "Novo livro";
-  $("#bTitle").value = editingBook?.title || "";
-  $("#bAuthor").value = editingBook?.author || "";
-  $("#bGenre").value = editingBook?.genre || "";
-  $("#bDate").value = editingBook?.date_read || "";
-  $("#bTime").value = editingBook?.read_time || "";
-  $("#bSummary").value = editingBook?.summary || "";
-  rating = editingBook?.rating || 0;
-  paintRating();
-  setPreview(editingBook?.cover_path ? coverUrl(editingBook.cover_path) : "");
-  $("#bDelete").hidden = !editingBook;
-  $("#bookDlg").showModal();
-  $("#bookDlg").scrollTop = 0;
+  $("#rFile").value = "";
+  const b = editingBook || {};
+  $("#rHead").textContent = editingBook ? "Ficha do livro" : "Novo livro";
+  $("#rTitle").value = b.title || ""; $("#rAuthor").value = b.author || ""; $("#rGenre").value = b.genre || "";
+  $("#rStart").value = b.start_date || ""; $("#rEnd").value = b.date_read || ""; $("#rTime").value = b.read_time || "";
+  $("#rPages").value = b.pages ?? "";
+  for (const r of document.querySelectorAll('input[name="fmt"]')) r.checked = r.value === (b.format || "");
+  $("#rSummary").value = b.summary || ""; $("#rReview").value = b.review || "";
+  $("#rQuotes").value = b.quotes || ""; $("#rTropes").value = b.tropes || "";
+  rating = b.rating || 0; paintRating();
+  setPreview(b.cover_path ? coverUrl(b.cover_path) : "");
+  $("#rDelete").hidden = !editingBook;
+  go("review");
 }
-
-$("#btnAddBook").addEventListener("click", () => openBook(null));
-$("#grid").addEventListener("click", (e) => {
-  const c = e.target.closest("[data-book]");
-  if (c) openBook(c.dataset.book);
-});
-$("#bCancel").addEventListener("click", () => $("#bookDlg").close());
+$("#btnBack").addEventListener("click", () => go("library"));
 
 async function resizeImage(file, maxW = 480) {
   const bmp = await createImageBitmap(file);
   const scale = Math.min(1, maxW / bmp.width);
   const c = document.createElement("canvas");
-  c.width = Math.round(bmp.width * scale);
-  c.height = Math.round(bmp.height * scale);
+  c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
   c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
   return new Promise((res) => c.toBlob(res, "image/jpeg", 0.85));
 }
+function daysBetween(a, b) {
+  if (!a || !b) return "";
+  const n = Math.max(1, Math.round((new Date(b) - new Date(a)) / 86400000) + 1);
+  return `${n} ${n === 1 ? "dia" : "dias"}`;
+}
 
-$("#bookForm").addEventListener("submit", async (e) => {
+$("#reviewForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const saveBtn = $("#bSave");
-  saveBtn.disabled = true;
-  saveBtn.textContent = "Salvando…";
+  const btn = $("#rSave");
+  btn.disabled = true; btn.textContent = "Salvando…";
   try {
+    const start = $("#rStart").value || null, end = $("#rEnd").value || null;
+    const fmt = document.querySelector('input[name="fmt"]:checked');
+    const pg = $("#rPages").value;
     const payload = {
-      title: $("#bTitle").value.trim(),
-      author: $("#bAuthor").value.trim(),
-      genre: $("#bGenre").value.trim(),
-      date_read: $("#bDate").value || null,
-      read_time: $("#bTime").value.trim(),
-      summary: $("#bSummary").value.trim(),
-      rating,
+      title: $("#rTitle").value.trim(), author: $("#rAuthor").value.trim(), genre: $("#rGenre").value.trim(),
+      start_date: start, date_read: end,
+      read_time: $("#rTime").value.trim() || daysBetween(start, end),
+      pages: pg === "" ? null : Number(pg), format: fmt ? fmt.value : "",
+      summary: $("#rSummary").value.trim(), review: $("#rReview").value.trim(),
+      quotes: $("#rQuotes").value.trim(), tropes: $("#rTropes").value.trim(), rating,
     };
-
-    let coverPath = editingBook?.cover_path || null;
-    let oldPath = null;
+    let coverPath = editingBook?.cover_path || null, oldPath = null;
     if (pendingFile) {
       const blob = await resizeImage(pendingFile);
       const path = `${user.id}/${crypto.randomUUID()}.jpg`;
       const up = await sb.storage.from("covers").upload(path, blob, { contentType: "image/jpeg" });
       if (up.error) throw up.error;
-      oldPath = coverPath;
-      coverPath = path;
+      oldPath = coverPath; coverPath = path;
     }
     payload.cover_path = coverPath;
-
     if (editingBook) {
       const { data, error } = await sb.from("books").update(payload).eq("id", editingBook.id).select().single();
       if (error) throw error;
@@ -697,41 +875,129 @@ $("#bookForm").addEventListener("submit", async (e) => {
       let pageId = currentPage;
       if (booksIn(pageId).length >= PAGE_CAP) {
         const p = await createPage(`Página ${pages.length + 1}`);
-        if (!p) throw new Error("Não foi possível criar a nova aba.");
-        pageId = p.id;
-        currentPage = p.id;
-        toast("A aba estava cheia. Criei uma nova para este livro.");
+        if (!p) throw new Error("Não foi possível criar a nova página.");
+        pageId = p.id; currentPage = p.id;
+        toast("A página estava cheia. Criei uma nova para este livro.");
       }
       const { data, error } = await sb.from("books").insert({ ...payload, user_id: user.id, page_id: pageId }).select().single();
       if (error) throw error;
       books.push(data);
     }
     if (oldPath) sb.storage.from("covers").remove([oldPath]);
-    $("#bookDlg").close();
-    renderLibrary();
+    toast("Livro salvo.");
+    go("library");
   } catch (err) {
-    toast("Não foi possível salvar: " + (err.message || err), true);
+    const m = String(err.message || err);
+    toast(/column|schema/i.test(m) ? "Faltam campos no banco. Rode o arquivo atualizacao.sql no Supabase." : "Não foi possível salvar: " + m, true);
   } finally {
-    saveBtn.disabled = false;
-    saveBtn.textContent = "Salvar";
+    btn.disabled = false; btn.textContent = "Salvar";
   }
 });
-
-$("#bDelete").addEventListener("click", async () => {
-  if (!editingBook) return;
-  if (!confirm(`Excluir “${editingBook.title}”? Isso não pode ser desfeito.`)) return;
+$("#rDelete").addEventListener("click", async () => {
+  if (!editingBook || !confirm(`Excluir “${editingBook.title}”? Isso não pode ser desfeito.`)) return;
   const { error } = await sb.from("books").delete().eq("id", editingBook.id);
   if (error) return toast("Não foi possível excluir: " + error.message, true);
   if (editingBook.cover_path) sb.storage.from("covers").remove([editingBook.cover_path]);
   books = books.filter((b) => b.id !== editingBook.id);
-  $("#bookDlg").close();
-  renderLibrary();
+  go("library");
 });
 
-/* fechar janelas ao tocar fora */
-for (const d of document.querySelectorAll("dialog")) {
-  d.addEventListener("click", (e) => { if (e.target === d) d.close(); });
+/* ====================== mês ====================== */
+const booksOf = (year, month) => books.filter((b) => { const [y, m] = ymd(b.date_read); return y === year && (month == null || m === month); });
+const avg = (list) => { const r = list.filter((b) => b.rating > 0); return r.length ? (r.reduce((s, b) => s + b.rating, 0) / r.length).toFixed(1).replace(".", ",") : "—"; };
+
+function renderMonths() {
+  $("#yLabel").textContent = monthYear;
+  $("#months").innerHTML = MONTHS.map((n, i) => {
+    const c = booksOf(monthYear, i + 1).length;
+    return `<button type="button" data-m="${i + 1}" aria-pressed="${monthSel === i + 1}">${n}<small>${c} ${c === 1 ? "livro" : "livros"}</small></button>`;
+  }).join("");
+  const box = $("#monthDetail");
+  if (!monthSel) { box.innerHTML = '<p class="empty-note">Toque em um mês para ver o que você leu nele. Os livros entram aqui pela data em “Li em”.</p>'; return; }
+  const list = booksOf(monthYear, monthSel).sort((a, b) => (a.date_read < b.date_read ? -1 : 1));
+  const fav = [...list].filter((b) => b.rating > 0).sort((a, b) => b.rating - a.rating).slice(0, 3);
+  box.innerHTML = `
+    <div class="panel">
+      <h3>${MONTHS[monthSel - 1]} de ${monthYear}</h3>
+      <div class="chips"><span class="chip">${list.length} ${list.length === 1 ? "livro lido" : "livros lidos"}</span><span class="chip">Nota média ${avg(list)}</span></div>
+      ${fav.length ? `<p class="sub" style="margin:4px 0">Favoritos: ${fav.map((b) => esc(b.title)).join(", ")}</p>` : ""}
+    </div>
+    <div class="panel">
+      <h3>Registro de leitura</h3>
+      ${list.length ? list.map(rowBook).join("") : '<p class="empty-note">Nenhum livro com data de leitura neste mês.</p>'}
+    </div>`;
 }
+function rowBook(b) {
+  const [y, m, d] = ymd(b.date_read);
+  const date = y ? `${String(d).padStart(2, "0")}/${String(m).padStart(2, "0")}/${y}` : "";
+  return `<button type="button" class="rowbook" data-book="${b.id}">
+    <span class="t">${b.cover_path ? `<img src="${esc(coverUrl(b.cover_path))}" alt="" loading="lazy">` : ""}</span>
+    <span><b>${esc(b.title)}</b><span class="s">${esc(b.author)}${b.author && date ? " · " : ""}${date}</span></span>
+    <span class="stars">${starsHtml(b.rating)}</span></button>`;
+}
+$("#yPrev").addEventListener("click", () => { monthYear--; monthSel = null; renderMonths(); });
+$("#yNext").addEventListener("click", () => { monthYear++; monthSel = null; renderMonths(); });
+$("#months").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-m]");
+  if (!b) return;
+  const m = Number(b.dataset.m);
+  monthSel = monthSel === m ? null : m;
+  renderMonths();
+});
+$("#monthDetail").addEventListener("click", (e) => {
+  const c = e.target.closest("[data-book]");
+  if (c) openBook(c.dataset.book);
+});
+
+/* ====================== desafios ====================== */
+function renderChallenges() {
+  const year = new Date().getFullYear();
+  const list = booksOf(year, null);
+  $("#chYear").textContent = year;
+  $("#goalInput").value = yearGoal || "";
+  const pct = yearGoal ? Math.min(100, Math.round((list.length / yearGoal) * 100)) : 0;
+  $("#goalFill").style.width = pct + "%";
+  $("#goalBar").setAttribute("aria-valuenow", pct);
+  $("#goalText").textContent = yearGoal
+    ? (list.length >= yearGoal ? `Meta batida: ${list.length} de ${yearGoal} livros.` : `${list.length} de ${yearGoal} livros (${pct}%). Faltam ${yearGoal - list.length}.`)
+    : `Defina uma meta para acompanhar. Até agora: ${list.length} ${list.length === 1 ? "livro" : "livros"} em ${year}.`;
+  const counts = MONTHS.map((_, i) => booksOf(year, i + 1).length);
+  const max = Math.max(1, ...counts);
+  $("#chart").innerHTML = counts.map((c, i) => `<div title="${MONTHS[i]}: ${c}"><b>${c || ""}</b><i style="height:${Math.round((c / max) * 88)}%"></i><span>${MONTHS[i].slice(0, 3)}</span></div>`).join("");
+  const genres = new Set(list.map((b) => b.genre.trim().toLowerCase()).filter(Boolean));
+  $("#genreText").textContent = genres.size ? `Você leu ${genres.size} ${genres.size === 1 ? "gênero diferente" : "gêneros diferentes"} em ${year}.` : "Preencha o gênero nos livros para ver sua variedade aqui.";
+}
+$("#goalSave").addEventListener("click", async () => {
+  const n = Math.max(0, Math.min(999, Number($("#goalInput").value) || 0));
+  yearGoal = n;
+  localStorage.setItem("yearly_goal", String(n));
+  const { error } = await sb.from("user_settings").upsert({ user_id: user.id, yearly_goal: n, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+  toast(error ? "Meta salva só neste aparelho. Rode o atualizacao.sql para sincronizar." : "Meta salva.", !!error);
+  renderChallenges();
+});
+
+/* ====================== extras ====================== */
+function renderExtras() {
+  const rated = books.filter((b) => b.rating > 0);
+  const pagesSum = books.reduce((s, b) => s + (b.pages || 0), 0);
+  $("#stats").innerHTML = [
+    `${books.length} ${books.length === 1 ? "livro" : "livros"}`,
+    `Nota média ${avg(books)}`,
+    `${rated.filter((b) => b.rating === 5).length} com 5 estrelas`,
+    pagesSum ? `${pagesSum.toLocaleString("pt-BR")} páginas` : "",
+  ].filter(Boolean).map((t) => `<span class="chip">${t}</span>`).join("");
+  const g = {};
+  for (const b of books) { const k = b.genre.trim(); if (k) g[k] = (g[k] || 0) + 1; }
+  const top = Object.entries(g).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  $("#topGenres").textContent = top.length ? "Gêneros mais lidos: " + top.map(([k, v]) => `${k} (${v})`).join(", ") : "";
+  const quotes = [];
+  for (const b of books) for (const q of (b.quotes || "").split("\n").map((x) => x.trim()).filter(Boolean)) quotes.push({ q, t: b.title });
+  $("#quotes").innerHTML = quotes.length
+    ? quotes.map((x) => `<div class="quote">“${esc(x.q)}”<small>${esc(x.t)}</small></div>`).join("")
+    : '<p class="empty-note">As citações que você anotar na ficha de cada livro aparecem aqui.</p>';
+}
+
+for (const d of document.querySelectorAll("dialog")) d.addEventListener("click", (e) => { if (e.target === d) d.close(); });
 </script>
 </body>
 </html>
