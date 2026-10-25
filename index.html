@@ -178,6 +178,16 @@ h1{font-size:30px;line-height:1.1}
   margin-top:14px;background:linear-gradient(0deg,var(--paper) 70%,rgba(255,253,249,0))}
 .savebar .spacer{flex:1}
 
+/* ---------- plano de fundo e backup ---------- */
+.bgrow{display:flex;justify-content:flex-end;margin:-4px 0 6px}
+.content.custom>section{background:rgba(255,253,249,.84);border-radius:12px;padding:12px}
+.swatches{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.sw{border:2px solid var(--line);border-radius:10px;height:66px;display:flex;align-items:flex-end;padding:4px;text-align:left;font-size:14px;background:var(--paper)}
+.sw span{background:rgba(255,253,249,.88);padding:0 6px;border-radius:6px}
+.sw[aria-pressed="true"]{border-color:#3c3426;box-shadow:0 0 0 2px #3c3426}
+.upl{cursor:pointer;text-align:center}
+.upl input{display:none}
+
 /* ---------- janelas e login ---------- */
 dialog{border:1px solid var(--line);border-radius:14px;background:var(--paper);color:var(--ink);padding:0;width:min(440px,calc(100vw - 16px))}
 dialog::backdrop{background:rgba(30,24,14,.55);backdrop-filter:blur(2px)}
@@ -227,6 +237,7 @@ input[type=text],input[type=email],input[type=password]{width:100%;background:va
 
 <div id="app" class="shell" hidden>
   <div class="content">
+    <div class="bgrow"><button class="link" id="btnBg" type="button">Plano de fundo</button></div>
 
     <!-- BIBLIOTECA -->
     <section id="v-library">
@@ -427,6 +438,14 @@ input[type=text],input[type=email],input[type=password]{width:100%;background:va
         <div id="quotes"></div>
       </div>
       <div class="panel">
+        <h3>Backup</h3>
+        <p class="sub" style="margin:0 0 10px">Salva tudo em um arquivo: livros, capas, estante, metas e planos de fundo. Guarde no celular, no computador ou no Drive. Importar nunca apaga o que você já tem.</p>
+        <div class="actions" style="justify-content:flex-start">
+          <button class="btn primary" id="btnExport" type="button">Exportar backup</button>
+          <label class="btn upl">Importar backup<input id="importFile" type="file" accept="application/json,.json"></label>
+        </div>
+      </div>
+      <div class="panel">
         <h3>Conta</h3>
         <p class="sub" id="whoami" style="margin:0 0 8px"></p>
         <button class="btn" id="btnOut" type="button">Sair</button>
@@ -499,6 +518,19 @@ input[type=text],input[type=email],input[type=password]{width:100%;background:va
   </form>
 </dialog>
 
+<dialog id="bgDlg">
+  <div class="dlg">
+    <h2 id="bgTitle">Plano de fundo</h2>
+    <div class="swatches" id="swatches"></div>
+    <label class="btn upl">Usar uma imagem minha<input id="bgFile" type="file" accept="image/*"></label>
+    <div class="actions">
+      <button class="btn" type="button" id="bgReset">Voltar ao padrão</button>
+      <span class="spacer"></span>
+      <button class="btn primary" type="button" id="bgClose">Fechar</button>
+    </div>
+  </div>
+</dialog>
+
 <datalist id="genres">
   <option value="Fantasia"><option value="Romance"><option value="Ficção científica"><option value="Suspense">
   <option value="Terror"><option value="Biografia"><option value="Autoajuda"><option value="Negócios">
@@ -557,6 +589,7 @@ const cfg = window.APP_CONFIG || {};
 let sb = null, user = null;
 let slots = new Map(), pages = [], books = [];
 let currentPage = null, editingSlot = null, editingBook = null, pendingFile = null, rating = 0;
+let backgrounds = {}, bgDlgKey = "library";
 let yearGoal = 0, monthYear = new Date().getFullYear(), monthSel = null, view = "library";
 
 /* ====================== início ====================== */
@@ -614,17 +647,21 @@ $("#btnOut").addEventListener("click", () => sb.auth.signOut());
 
 /* ====================== carregar dados ====================== */
 async function loadAll() {
-  const [s, p, b, g] = await Promise.all([
+  const [s, p, b] = await Promise.all([
     sb.from("shelf_slots").select("slot,title,author"),
     sb.from("library_pages").select("*").order("position").order("created_at"),
     sb.from("books").select("*").order("created_at"),
-    sb.from("user_settings").select("yearly_goal").maybeSingle(),
   ]);
   const failed = s.error || p.error || b.error;
   if (failed) { toast("Erro ao carregar: " + failed.message, true); return; }
   slots = new Map(s.data.map((r) => [r.slot, r]));
   pages = p.data; books = b.data;
+  let g = await sb.from("user_settings").select("yearly_goal,backgrounds").maybeSingle();
+  if (g.error) g = await sb.from("user_settings").select("yearly_goal").maybeSingle();
   yearGoal = g.error ? Number(localStorage.getItem("yearly_goal") || 0) : g.data?.yearly_goal || 0;
+  const remoteBg = g.data?.backgrounds;
+  try { backgrounds = remoteBg && Object.keys(remoteBg).length ? remoteBg : JSON.parse(localStorage.getItem("backgrounds:" + user.id) || "{}"); }
+  catch { backgrounds = {}; }
   if (!pages.length) await createPage("Página 1");
   if (!pages.find((x) => x.id === currentPage)) currentPage = pages[0]?.id || null;
   $("#whoami").textContent = "Conectado como " + (user.email || "");
@@ -639,6 +676,7 @@ function go(name) {
   for (const b of document.querySelectorAll(".tabs button")) {
     if (b.dataset.go === tab) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
   }
+  applyBackground();
   if (name === "library") renderLibrary();
   if (name === "shelf") renderShelf();
   if (name === "month") renderMonths();
@@ -995,6 +1033,221 @@ function renderExtras() {
   $("#quotes").innerHTML = quotes.length
     ? quotes.map((x) => `<div class="quote">“${esc(x.q)}”<small>${esc(x.t)}</small></div>`).join("")
     : '<p class="empty-note">As citações que você anotar na ficha de cada livro aparecem aqui.</p>';
+}
+
+/* ====================== plano de fundo por menu ====================== */
+const BG_SECTIONS = { library: "Biblioteca", shelf: "Estante", month: "Mês", challenges: "Desafios", extras: "Extras" };
+const BG_PRESETS = [
+  { id: "papel", name: "Papel", css: "" },
+  { id: "pontos", name: "Pontilhado", css: "radial-gradient(#cfc6ae 1.2px,transparent 1.5px) 0 0/18px 18px,#fbf7ec" },
+  { id: "grade", name: "Quadriculado", css: "linear-gradient(#e4ddc9 1px,transparent 1px) 0 0/22px 22px,linear-gradient(90deg,#e4ddc9 1px,transparent 1px) 0 0/22px 22px,#fbf8ef" },
+  { id: "pauta", name: "Pautado", css: "repeating-linear-gradient(#fbf8ef 0 27px,#d9d1bc 27px 28px)" },
+  { id: "salvia", name: "Sálvia", css: "linear-gradient(160deg,#e3ebdb,#cbdac2)" },
+  { id: "rose", name: "Rosé", css: "linear-gradient(160deg,#f6e4e0,#ebcfca)" },
+  { id: "nevoa", name: "Azul névoa", css: "linear-gradient(160deg,#e1ebf2,#cbdbe7)" },
+  { id: "areia", name: "Areia", css: "linear-gradient(160deg,#f1e8d3,#e2d3b2)" },
+  { id: "lavanda", name: "Lavanda", css: "linear-gradient(160deg,#e9e3f3,#d8cde9)" },
+];
+const bgKey = () => (view === "review" ? "library" : view);
+
+function applyBackground() {
+  const c = $(".content");
+  const b = backgrounds[bgKey()];
+  let css = "";
+  if (b?.type === "preset") css = BG_PRESETS.find((p) => p.id === b.id)?.css || "";
+  else if (b?.type === "image" && b.path) css = `url("${coverUrl(b.path)}") center/cover`;
+  c.style.background = css;
+  c.classList.toggle("custom", !!css);
+}
+async function saveBackgrounds() {
+  localStorage.setItem("backgrounds:" + user.id, JSON.stringify(backgrounds));
+  const { error } = await sb.from("user_settings").upsert({ user_id: user.id, backgrounds, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+  if (error) toast("Plano de fundo salvo só neste aparelho. Rode o atualizacao2.sql para sincronizar.", true);
+}
+function renderSwatches() {
+  const cur = backgrounds[bgDlgKey];
+  $("#bgTitle").textContent = "Plano de fundo: " + BG_SECTIONS[bgDlgKey];
+  $("#swatches").innerHTML = BG_PRESETS.map((p) => {
+    const on = cur?.type === "preset" ? cur.id === p.id : !cur && p.id === "papel";
+    return `<button type="button" class="sw" data-id="${p.id}" aria-pressed="${on}" style="background:${p.css || "var(--paper)"}"><span>${p.name}</span></button>`;
+  }).join("");
+}
+async function dropOldBgImage(old) {
+  if (old?.type === "image" && old.path) await sb.storage.from("covers").remove([old.path]);
+}
+$("#btnBg").addEventListener("click", () => { bgDlgKey = bgKey(); renderSwatches(); $("#bgDlg").showModal(); });
+$("#bgClose").addEventListener("click", () => $("#bgDlg").close());
+$("#swatches").addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-id]");
+  if (!b) return;
+  const old = backgrounds[bgDlgKey];
+  if (b.dataset.id === "papel") delete backgrounds[bgDlgKey];
+  else backgrounds[bgDlgKey] = { type: "preset", id: b.dataset.id };
+  renderSwatches(); applyBackground();
+  await saveBackgrounds(); dropOldBgImage(old);
+});
+$("#bgReset").addEventListener("click", async () => {
+  const old = backgrounds[bgDlgKey];
+  delete backgrounds[bgDlgKey];
+  renderSwatches(); applyBackground();
+  await saveBackgrounds(); dropOldBgImage(old);
+});
+$("#bgFile").addEventListener("change", async (e) => {
+  const f = e.target.files[0];
+  e.target.value = "";
+  if (!f) return;
+  try {
+    toast("Enviando imagem…");
+    const blob = await resizeImage(f, 1400);
+    const path = `${user.id}/bg-${bgDlgKey}-${crypto.randomUUID()}.jpg`;
+    const up = await sb.storage.from("covers").upload(path, blob, { contentType: "image/jpeg" });
+    if (up.error) throw up.error;
+    const old = backgrounds[bgDlgKey];
+    backgrounds[bgDlgKey] = { type: "image", path };
+    renderSwatches(); applyBackground();
+    await saveBackgrounds(); dropOldBgImage(old);
+    toast("Plano de fundo aplicado.");
+  } catch (err) { toast("Não foi possível enviar a imagem: " + (err.message || err), true); }
+});
+
+/* ====================== backup (exportar e importar) ====================== */
+const blobToDataUrl = (b) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); });
+async function fetchAsDataUrl(path) {
+  try { const r = await fetch(coverUrl(path)); return r.ok ? await blobToDataUrl(await r.blob()) : null; } catch { return null; }
+}
+async function pool(items, n, fn) {
+  let i = 0;
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => { while (i < items.length) { const k = i++; await fn(items[k], k); } }));
+}
+
+$("#btnExport").addEventListener("click", async () => {
+  const btn = $("#btnExport");
+  btn.disabled = true;
+  try {
+    toast("Preparando o backup…");
+    const paths = [...new Set([
+      ...books.map((b) => b.cover_path),
+      ...Object.values(backgrounds).filter((b) => b?.type === "image").map((b) => b.path),
+    ].filter(Boolean))];
+    const covers = {};
+    await pool(paths, 5, async (p) => { covers[p] = await fetchAsDataUrl(p); });
+    const data = {
+      app: "minha-biblioteca", version: 2, exported_at: new Date().toISOString(),
+      shelf_slots: [...slots.values()].map(({ slot, title, author }) => ({ slot, title, author })),
+      pages: pages.map(({ user_id, ...rest }) => rest),
+      books: books.map(({ user_id, ...rest }) => rest),
+      settings: { yearly_goal: yearGoal, backgrounds },
+      covers,
+    };
+    const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `biblioteca-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+    toast(`Backup pronto: ${books.length} livros.`);
+  } catch (err) { toast("Não foi possível exportar: " + (err.message || err), true); }
+  finally { btn.disabled = false; }
+});
+
+$("#importFile").addEventListener("change", async (e) => {
+  const f = e.target.files[0];
+  e.target.value = "";
+  if (!f) return;
+  let data;
+  try { data = JSON.parse(await f.text()); } catch { return toast("Arquivo inválido.", true); }
+  if (data?.app !== "minha-biblioteca" || !Array.isArray(data.books)) return toast("Este arquivo não parece um backup da Minha Biblioteca.", true);
+  const sig = (b) => [b.title, b.author, b.start_date || "", b.date_read || ""].map((x) => String(x).trim().toLowerCase()).join("|");
+  const have = new Set(books.map(sig));
+  const newBooks = data.books.filter((b) => !have.has(sig(b)));
+  const isFree = (n) => { const v = slots.get(n); return !(v && (v.title || v.author)); };
+  const newSlots = (data.shelf_slots || []).filter((x) => (x.title || x.author) && isFree(x.slot));
+  const when = data.exported_at ? data.exported_at.slice(0, 10) : "sem data";
+  const ok = confirm(`Importar o backup de ${when}?\n\n• ${newBooks.length} livros novos (${data.books.length - newBooks.length} já existem e serão ignorados)\n• ${newSlots.length} lombadas da estante\n\nNada do que você já tem será apagado ou alterado.`);
+  if (!ok) return;
+  try { await importBackup(data, newBooks, newSlots); }
+  catch (err) {
+    const m = String(err.message || err);
+    toast(/column|schema/i.test(m) ? "Faltam campos no banco. Rode o atualizacao.sql no Supabase." : "Não foi possível importar: " + m, true);
+  }
+});
+
+async function dataUrlToBlob(u) { return (await fetch(u)).blob(); }
+async function uploadFromBackup(dataUrl, name) {
+  const blob = await dataUrlToBlob(dataUrl);
+  const path = `${user.id}/${name}-${crypto.randomUUID()}.jpg`;
+  const up = await sb.storage.from("covers").upload(path, blob, { contentType: blob.type || "image/jpeg" });
+  if (up.error) throw up.error;
+  return path;
+}
+
+async function importBackup(data, newBooks, newSlots) {
+  toast("Importando… não feche a página.");
+  const covers = data.covers || {};
+  const pageMap = new Map(), counts = new Map();
+  const target = async (oldId) => {
+    let pid = pageMap.get(oldId);
+    if (!pid) {
+      const bp = (data.pages || []).find((p) => p.id === oldId);
+      const name = bp?.name || "Importados";
+      const found = pages.find((p) => p.name.toLowerCase() === name.toLowerCase());
+      pid = found ? found.id : (await createPage(name))?.id;
+      if (!pid) throw new Error("Não foi possível criar a página.");
+      pageMap.set(oldId, pid);
+    }
+    if (!counts.has(pid)) counts.set(pid, booksIn(pid).length);
+    if (counts.get(pid) >= PAGE_CAP) {
+      const np = await createPage(`${pages.find((p) => p.id === pid).name} (cont.)`);
+      if (!np) throw new Error("Não foi possível criar a página.");
+      pid = np.id; pageMap.set(oldId, pid); counts.set(pid, 0);
+    }
+    counts.set(pid, counts.get(pid) + 1);
+    return pid;
+  };
+
+  const ordered = [...newBooks].sort((a, b) => String(a.created_at || "").localeCompare(String(b.created_at || "")));
+  const rows = [];
+  for (const b of ordered) {
+    rows.push({ b, page_id: await target(b.page_id), cover: null });
+  }
+  await pool(rows.filter((r) => r.b.cover_path && covers[r.b.cover_path]), 4, async (r) => {
+    try { r.cover = await uploadFromBackup(covers[r.b.cover_path], "cover"); } catch { r.cover = null; }
+  });
+  const payloads = rows.map(({ b, page_id, cover }) => ({
+    user_id: user.id, page_id, title: b.title || "", author: b.author || "", genre: b.genre || "",
+    date_read: b.date_read || null, start_date: b.start_date || null, read_time: b.read_time || "",
+    pages: b.pages ?? null, format: b.format || "", rating: Math.min(5, Math.max(0, Number(b.rating) || 0)),
+    summary: b.summary || "", review: b.review || "", quotes: b.quotes || "", tropes: b.tropes || "",
+    cover_path: cover, ...(b.created_at ? { created_at: b.created_at } : {}),
+  }));
+  for (let i = 0; i < payloads.length; i += 50) {
+    const { data: ins, error } = await sb.from("books").insert(payloads.slice(i, i + 50)).select();
+    if (error) throw error;
+    books.push(...ins);
+  }
+  if (newSlots.length) {
+    const { error } = await sb.from("shelf_slots").upsert(
+      newSlots.map((x) => ({ user_id: user.id, slot: x.slot, title: x.title || "", author: x.author || "" })), { onConflict: "user_id,slot" });
+    if (error) throw error;
+    for (const x of newSlots) slots.set(x.slot, { slot: x.slot, title: x.title || "", author: x.author || "" });
+  }
+  const st = data.settings || {};
+  if (!yearGoal && st.yearly_goal) {
+    yearGoal = Number(st.yearly_goal) || 0;
+    localStorage.setItem("yearly_goal", String(yearGoal));
+    await sb.from("user_settings").upsert({ user_id: user.id, yearly_goal: yearGoal, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+  }
+  let bgChanged = false;
+  for (const [key, val] of Object.entries(st.backgrounds || {})) {
+    if (backgrounds[key] || !BG_SECTIONS[key]) continue;
+    if (val?.type === "preset") { backgrounds[key] = val; bgChanged = true; }
+    else if (val?.type === "image" && covers[val.path]) {
+      try { backgrounds[key] = { type: "image", path: await uploadFromBackup(covers[val.path], "bg-" + key) }; bgChanged = true; } catch {}
+    }
+  }
+  if (bgChanged) await saveBackgrounds();
+  toast(`Importação concluída: ${payloads.length} livros e ${newSlots.length} lombadas.`);
+  go(view);
 }
 
 for (const d of document.querySelectorAll("dialog")) d.addEventListener("click", (e) => { if (e.target === d) d.close(); });
