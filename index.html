@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#ebe6db">
 <title>Minha Biblioteca</title>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
@@ -27,7 +31,7 @@ button{cursor:pointer}
 
 /* ---------- estrutura: página + abas na lateral direita ---------- */
 .shell{display:flex;max-width:1100px;margin:0 auto;min-height:100dvh}
-.content{flex:1;min-width:0;background:var(--paper);padding:calc(14px + env(safe-area-inset-top,0px)) 14px calc(28px + env(safe-area-inset-bottom,0px)) 14px;
+.content{flex:1;min-width:0;background:var(--paper);padding:0 14px calc(28px + env(safe-area-inset-bottom,0px)) 14px;
   box-shadow:0 0 0 1px var(--line)}
 .tabs{position:sticky;top:0;align-self:flex-start;height:100dvh;width:var(--tabw);display:flex;flex-direction:column;flex:none}
 .tabs button{flex:1;min-height:0;border:0;border-left:1px solid rgba(0,0,0,.08);border-bottom:1px solid rgba(0,0,0,.12);
@@ -179,7 +183,14 @@ h1{font-size:30px;line-height:1.1}
 .savebar .spacer{flex:1}
 
 /* ---------- plano de fundo e backup ---------- */
-.bgrow{display:flex;justify-content:flex-end;margin:-4px 0 6px}
+.bgLayer{position:sticky;top:0;height:100dvh;margin:0 -14px -100dvh;pointer-events:none;z-index:0;background-repeat:no-repeat}
+.content>.bgrow,.content>section{position:relative;z-index:1}
+.bgrow{display:flex;justify-content:flex-end;margin:calc(10px + env(safe-area-inset-top,0px)) 0 6px}
+.bgedit{display:grid;gap:8px;justify-items:center}
+.bgprev{position:relative;border:2px solid #3c3426;border-radius:10px;background:var(--card) no-repeat;cursor:grab;touch-action:none;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.bgprev:active{cursor:grabbing}
+.bgedit label{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;width:100%;font-weight:600;font-size:15px}
+.bgedit input[type=range]{width:100%;accent-color:#8b7a55}
 .content.custom>section{background:rgba(255,253,249,.84);border-radius:12px;padding:12px}
 .swatches{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .sw{border:2px solid var(--line);border-radius:10px;height:66px;display:flex;align-items:flex-end;padding:4px;text-align:left;font-size:14px;background:var(--paper)}
@@ -237,6 +248,7 @@ input[type=text],input[type=email],input[type=password]{width:100%;background:va
 
 <div id="app" class="shell" hidden>
   <div class="content">
+    <div class="bgLayer" id="bgLayer" aria-hidden="true"></div>
     <div class="bgrow"><button class="link" id="btnBg" type="button">Plano de fundo</button></div>
 
     <!-- BIBLIOTECA -->
@@ -522,6 +534,12 @@ input[type=text],input[type=email],input[type=password]{width:100%;background:va
   <div class="dlg">
     <h2 id="bgTitle">Plano de fundo</h2>
     <div class="swatches" id="swatches"></div>
+    <div class="bgedit" id="bgEditor" hidden>
+      <div class="bgprev" id="bgPrev" aria-label="Pré-visualização: arraste a imagem para posicionar"></div>
+      <span class="sub" style="font-size:14px">Arraste a imagem para escolher a posição.</span>
+      <label>Tamanho <input id="bgZoom" type="range" min="100" max="300" step="1" value="100"></label>
+      <button class="btn" type="button" id="bgCenter">Centralizar</button>
+    </div>
     <label class="btn upl">Usar uma imagem minha<input id="bgFile" type="file" accept="image/*"></label>
     <div class="actions">
       <button class="btn" type="button" id="bgReset">Voltar ao padrão</button>
@@ -1050,15 +1068,114 @@ const BG_PRESETS = [
 ];
 const bgKey = () => (view === "review" ? "library" : view);
 
-function applyBackground() {
-  const c = $(".content");
-  const b = backgrounds[bgKey()];
-  let css = "";
-  if (b?.type === "preset") css = BG_PRESETS.find((p) => p.id === b.id)?.css || "";
-  else if (b?.type === "image" && b.path) css = `url("${coverUrl(b.path)}") center/cover`;
-  c.style.background = css;
-  c.classList.toggle("custom", !!css);
+const dimsCache = new Map();
+function imgDims(b) {
+  return new Promise((res) => {
+    if (b.w && b.h) return res({ w: b.w, h: b.h });
+    if (dimsCache.has(b.path)) return res(dimsCache.get(b.path));
+    const im = new Image();
+    im.onload = () => { const d = { w: im.naturalWidth, h: im.naturalHeight }; dimsCache.set(b.path, d); res(d); };
+    im.onerror = () => res(null);
+    im.src = coverUrl(b.path);
+  });
 }
+/* tamanho e posição da imagem dentro de uma caixa cw x ch (100% = cobrir a caixa) */
+function bgGeometry(b, d, cw, ch) {
+  const z = Math.max(1, Math.min(3, b.z || 1));
+  const sc = Math.max(cw / d.w, ch / d.h) * z;
+  return { iw: d.w * sc, ih: d.h * sc, x: b.x ?? 50, y: b.y ?? 50 };
+}
+function paintBox(el, b, d) {
+  const cw = el.clientWidth, ch = el.clientHeight;
+  if (!cw || !ch) return;
+  const g = bgGeometry(b, d, cw, ch);
+  el.style.backgroundImage = `url("${coverUrl(b.path)}")`;
+  el.style.backgroundRepeat = "no-repeat";
+  el.style.backgroundSize = `${g.iw}px ${g.ih}px`;
+  el.style.backgroundPosition = `${g.x}% ${g.y}%`;
+}
+let bgToken = 0;
+async function applyBackground() {
+  const layer = $("#bgLayer"), c = $(".content");
+  const b = backgrounds[bgKey()];
+  const token = ++bgToken;
+  layer.style.cssText = "";
+  if (b?.type === "preset") {
+    const css = BG_PRESETS.find((p) => p.id === b.id)?.css || "";
+    if (css) layer.style.background = css;
+    c.classList.toggle("custom", !!css);
+  } else if (b?.type === "image" && b.path) {
+    c.classList.add("custom");
+    const d = await imgDims(b);
+    if (token === bgToken && d) paintBox(layer, b, d);
+  } else c.classList.remove("custom");
+}
+let resizeRaf = 0;
+addEventListener("resize", () => {
+  cancelAnimationFrame(resizeRaf);
+  resizeRaf = requestAnimationFrame(() => { if (backgrounds[bgKey()]?.type === "image") applyBackground(); });
+});
+
+/* editor de posição e tamanho da imagem de fundo */
+let editDims = null, drag = null;
+const curImg = () => { const b = backgrounds[bgDlgKey]; return b?.type === "image" ? b : null; };
+async function renderEditor() {
+  const b = curImg();
+  $("#bgEditor").hidden = !b;
+  if (!b) return;
+  editDims = await imgDims(b);
+  if (!editDims || curImg() !== b) return;
+  const layer = $("#bgLayer");
+  const lw = layer.clientWidth || innerWidth, lh = layer.clientHeight || innerHeight;
+  const pw = Math.max(120, Math.min(240, innerWidth - 90));
+  const prev = $("#bgPrev");
+  prev.style.width = pw + "px";
+  prev.style.height = Math.round((pw * lh) / lw) + "px";
+  $("#bgZoom").value = Math.round((b.z || 1) * 100);
+  paintBox(prev, b, editDims);
+}
+function repaintBoth() {
+  const b = curImg();
+  if (!b || !editDims) return;
+  paintBox($("#bgPrev"), b, editDims);
+  if (bgDlgKey === bgKey()) paintBox($("#bgLayer"), b, editDims);
+}
+const bgPrev = $("#bgPrev");
+bgPrev.addEventListener("pointerdown", (e) => {
+  if (!curImg() || !editDims) return;
+  bgPrev.setPointerCapture(e.pointerId);
+  drag = { x: e.clientX, y: e.clientY };
+});
+bgPrev.addEventListener("pointermove", (e) => {
+  const b = curImg();
+  if (!drag || !b || !editDims) return;
+  const pw = bgPrev.clientWidth, ph = bgPrev.clientHeight;
+  const g = bgGeometry(b, editDims, pw, ph);
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  drag = { x: e.clientX, y: e.clientY };
+  const rx = pw - g.iw, ry = ph - g.ih;
+  if (rx < -0.5) b.x = Math.max(0, Math.min(100, ((rx * (b.x ?? 50)) / 100 + dx) / rx * 100));
+  if (ry < -0.5) b.y = Math.max(0, Math.min(100, ((ry * (b.y ?? 50)) / 100 + dy) / ry * 100));
+  repaintBoth();
+});
+const endDrag = () => { if (drag) { drag = null; saveBackgrounds(); } };
+bgPrev.addEventListener("pointerup", endDrag);
+bgPrev.addEventListener("pointercancel", endDrag);
+$("#bgZoom").addEventListener("input", (e) => {
+  const b = curImg();
+  if (!b) return;
+  b.z = Number(e.target.value) / 100;
+  repaintBoth();
+});
+$("#bgZoom").addEventListener("change", () => saveBackgrounds());
+$("#bgCenter").addEventListener("click", () => {
+  const b = curImg();
+  if (!b) return;
+  b.x = 50; b.y = 50; b.z = 1;
+  $("#bgZoom").value = 100;
+  repaintBoth();
+  saveBackgrounds();
+});
 async function saveBackgrounds() {
   localStorage.setItem("backgrounds:" + user.id, JSON.stringify(backgrounds));
   const { error } = await sb.from("user_settings").upsert({ user_id: user.id, backgrounds, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
@@ -1071,11 +1188,12 @@ function renderSwatches() {
     const on = cur?.type === "preset" ? cur.id === p.id : !cur && p.id === "papel";
     return `<button type="button" class="sw" data-id="${p.id}" aria-pressed="${on}" style="background:${p.css || "var(--paper)"}"><span>${p.name}</span></button>`;
   }).join("");
+  renderEditor();
 }
 async function dropOldBgImage(old) {
   if (old?.type === "image" && old.path) await sb.storage.from("covers").remove([old.path]);
 }
-$("#btnBg").addEventListener("click", () => { bgDlgKey = bgKey(); renderSwatches(); $("#bgDlg").showModal(); });
+$("#btnBg").addEventListener("click", () => { bgDlgKey = bgKey(); renderSwatches(); $("#bgDlg").showModal(); renderEditor(); });
 $("#bgClose").addEventListener("click", () => $("#bgDlg").close());
 $("#swatches").addEventListener("click", async (e) => {
   const b = e.target.closest("[data-id]");
@@ -1103,7 +1221,8 @@ $("#bgFile").addEventListener("change", async (e) => {
     const up = await sb.storage.from("covers").upload(path, blob, { contentType: "image/jpeg" });
     if (up.error) throw up.error;
     const old = backgrounds[bgDlgKey];
-    backgrounds[bgDlgKey] = { type: "image", path };
+    const bmp = await createImageBitmap(blob);
+    backgrounds[bgDlgKey] = { type: "image", path, w: bmp.width, h: bmp.height, x: 50, y: 50, z: 1 };
     renderSwatches(); applyBackground();
     await saveBackgrounds(); dropOldBgImage(old);
     toast("Plano de fundo aplicado.");
@@ -1242,7 +1361,7 @@ async function importBackup(data, newBooks, newSlots) {
     if (backgrounds[key] || !BG_SECTIONS[key]) continue;
     if (val?.type === "preset") { backgrounds[key] = val; bgChanged = true; }
     else if (val?.type === "image" && covers[val.path]) {
-      try { backgrounds[key] = { type: "image", path: await uploadFromBackup(covers[val.path], "bg-" + key) }; bgChanged = true; } catch {}
+      try { backgrounds[key] = { ...val, type: "image", path: await uploadFromBackup(covers[val.path], "bg-" + key) }; bgChanged = true; } catch {}
     }
   }
   if (bgChanged) await saveBackgrounds();
